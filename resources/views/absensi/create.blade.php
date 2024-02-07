@@ -21,6 +21,9 @@
         <input type="hidden" name="lokasi" id="lokasi">
         <div class="webcam-capture"></div>
       </div>
+      <div class="grid grid-rows-1 pb-3 px-3 items-center justify-center">
+        <div id="canvasContainer" class="grid grid-cols-3"></div>
+      </div>
       <div class="grid grid-rows-1 pb-1 px-3">
         <label for="laporan" class="block text-sm font-medium leading-6 text-white">Laporan</label>
         <div>
@@ -31,13 +34,12 @@
         <div class="" id="map"></div>
       </div>
       <div class="grid grid-rows-1 px-3" style="padding-bottom: 100px;">
-        @if($cek > 0)
+        @if($cek)
         @if($selisihWaktu < 15) <button id="takeAbsenKeluar" onclick="submitAbsen('Keluar')" class="bg-red-500 hover:bg-red-700 font-bold py-2 px-4 rounded text-white text-center pb-10">
           <ion-icon name="camera-outline" class="text-center"></ion-icon>
           Absen Keluar
           </button>
           @else
-          <p>Sudah lebih dari 15 jam sejak absen masuk. Anda hanya dapat melakukan absen masuk kembali.</p>
           <button id="takeAbsenMasuk" onclick="submitAbsen('Masuk')" class="bg-cyan-500 hover:bg-cyan-700 font-bold py-2 px-4 rounded text-white text-center pb-10">
             <ion-icon name="camera-outline" class="text-center"></ion-icon>
             Absen Masuk
@@ -228,7 +230,7 @@
 
   function submitAbsen(type) {
     // Disable the button to prevent multiple clicks
-    document.getElementById(`takeAbsen${type}`).disabled = true;
+    // document.getElementById(`takeAbsen${type}`).disabled = true;
 
     // You can also submit the form or perform other actions here
     // For example, if you have a form, you can use form.submit();

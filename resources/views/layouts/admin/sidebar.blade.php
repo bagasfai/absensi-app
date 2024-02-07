@@ -233,7 +233,7 @@
                 <path d="M7 10h2l2 3l2 -6l1 3h3" /></svg>
             </span>
             <span class="nav-link-title">
-              Pengajuan Izin / Sakit
+              Pengajuan Izin / Sakit <small class="badge badge-danger bg-red text-white d-block">{{ $jumlahIzin }}</small>
             </span>
           </a>
         </li>

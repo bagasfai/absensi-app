@@ -12,13 +12,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
+use Telegram\Bot\Laravel\Facades\Telegram;
+use App\Http\Controllers\TelegramController;
+
 
 class AbsensiController extends Controller
 {
   public function index()
   {
     $absen = Absen::all();
-    return view('absensi.index', ['absen' => $absen]);
+    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    return view('absensi.index', compact('absen', 'jumlahIzin'));
   }
 
   public function masuk()
@@ -42,7 +46,7 @@ class AbsensiController extends Controller
   {
     $hariini = date("Y-m-d");
     $email = auth()->user()->email;
-    $cek = Absen::where('tanggal', $hariini)->where('email', $email)->count();
+    $cek = Absen::where('email', $email)->whereNull('jam_keluar')->orderBy('id', 'desc')->first();
     $currentDateTime = now();
     $latestEntry = Absen::select(DB::raw('CONCAT(tanggal, " ", jam_masuk) as datetime'))
       ->where('email', $email)
@@ -55,7 +59,7 @@ class AbsensiController extends Controller
       $selisihWaktu = $currentDateTime->diffInHours($lastEntryDateTime);
     } else {
       $lastEntryDateTime = "";
-      $selisihWaktu = "";
+      $selisihWaktu = 24;
     }
 
     return view('absensi.create', compact('cek', 'email', 'hariini', 'selisihWaktu'));
@@ -93,7 +97,7 @@ class AbsensiController extends Controller
       $data = [
         'email' => $email,
         'nama' => $nama,
-        'status' => 0,
+        'status' => 'H',
         'tanggal' => $tanggal,
         'jam_masuk' => $jam,
         'foto_masuk' => $fileName,
@@ -267,6 +271,7 @@ class AbsensiController extends Controller
         'nama' => $nama,
         'email' => $email,
         'foto' => $foto,
+        'id_telegram' => $request->id_telegram,
       ];
     } else {
       $data = [
@@ -274,8 +279,16 @@ class AbsensiController extends Controller
         'email' => $email,
         'password' => $password,
         'foto' => $foto,
+        'id_telegram' => $request->id_telegram,
       ];
     }
+
+    $chatId = '649920017';
+    $message = 'testing lol';
+
+    // Send the message using TelegramController
+    $telegramController = app(TelegramController::class);
+    $telegramController->sendMessage($chatId, $message);
 
     $update = User::where('email', $email)->update($data);
     if ($update) {
@@ -452,7 +465,8 @@ class AbsensiController extends Controller
     $tanggal = $request->tanggal_izin;
     $status = $request->status;
     $keterangan = $request->keterangan;
-    $karyawan = User::where('email', $email)->first();
+    $nama = User::where('email', $email)->pluck('nama')->first();
+    $idTelegram = User::where('jabatan', 'SUPERADMIN')->pluck('id_telegram')->toArray();
 
     if ($request->hasFile('foto')) {
       $foto = $status . "-" . $tanggal . "-" . $email . "." . $request->file('foto')->getClientOriginalExtension();
@@ -475,6 +489,14 @@ class AbsensiController extends Controller
       ];
     }
 
+    $message = "PENGAJUAN IZIN \n\n$nama mengajukan pengajuan $status \nuntuk tanggal $tanggal \n\nDengan keterangan: \n$keterangan";
+
+    // Send the message using TelegramController
+    $telegramController = app(TelegramController::class);
+    foreach ($idTelegram as $chatId) {
+      $telegramController->sendMessage($chatId, $message);
+    }
+
     $simpan = Pengajuan_Izin::insert($data);
 
     if ($simpan) {
@@ -490,15 +512,17 @@ class AbsensiController extends Controller
 
   public function monitor()
   {
-    return view('absensi.monitor');
+    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    return view('absensi.monitor', compact('jumlahIzin'));
   }
 
   public function getpresensi(Request $request)
   {
     $tanggal = $request->tanggal;
     $absen = Absen::where('tanggal', $tanggal)->get();
+    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
 
-    return view('absensi.getpresensi', compact('absen'));
+    return view('absensi.getpresensi', compact('absen', 'jumlahIzin'));
   }
 
   public function showmap(Request $request)
@@ -513,8 +537,9 @@ class AbsensiController extends Controller
   {
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     $user = User::orderBy('nama')->get();
+    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
 
-    return view('absensi.laporan', compact('namabulan', 'user'));
+    return view('absensi.laporan', compact('namabulan', 'user', 'jumlahIzin'));
   }
 
   public function cetaklaporan(Request $request)
@@ -545,8 +570,9 @@ class AbsensiController extends Controller
   public function rekap()
   {
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
 
-    return view('absensi.rekap', compact('namabulan'));
+    return view('absensi.rekap', compact('namabulan', 'jumlahIzin'));
   }
 
   public function cetakrekap(Request $request)
@@ -614,17 +640,52 @@ class AbsensiController extends Controller
     }
     $query->orderBy('tanggal_izin', 'desc');
     $izinsakit = $query->get();
+
+    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+
     // $izinsakit->appends($request->all());
-    return view('absensi.izinsakit', compact('izinsakit'));
+    return view('absensi.izinsakit', compact('izinsakit', 'jumlahIzin'));
   }
 
   public function action(Request $request)
   {
     $status_approved = $request->status_approved;
     $id_izin_form = $request->id_izin_form;
+    $status_izin_form = $request->status_izin_form;
+    $tanggal = $request->tanggal_izin_form;
+    $evident = $request->evident_izin_form;
+    $nama = $request->nama_izin_form;
+    $email = $request->email_izin_form;
+
+    if ($status_approved == 1) {
+      if ($status_izin_form == "SAKIT") {
+        $status = "S";
+      } else {
+        $status = "I";
+      }
+
+      $data = [
+        'email' => $email,
+        'nama' => $nama,
+        'status' => $status,
+        'tanggal' => $tanggal,
+        'jam_masuk' => "00:00:00",
+        'jam_keluar' => "00:00:00",
+        'foto_masuk' => $evident ?? '',
+        'foto_keluar' => $evident ?? '',
+        'lokasi_masuk' => "",
+        'lokasi_keluar' => "",
+        'laporan_masuk' => $status_izin_form,
+        'laporan_keluar' => $status_izin_form,
+      ];
+
+      $simpan = Absen::insert($data);
+    }
+
     $update = Pengajuan_Izin::where('id', $id_izin_form)->update([
       'status_approved' => $status_approved,
     ]);
+
     if ($update) {
       return Redirect::back()->with(['success' => 'Data berhasil di Update']);
     } else {

@@ -32,6 +32,7 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'nama' => ['required', 'string', 'max:255'],
+            'id_telegram' => ['required'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'jabatan' => ['required'],
@@ -40,6 +41,7 @@ class RegisteredUserController extends Controller
         $user = User::create([
             'perner' => $request->perner,
             'nama' => $request->nama,
+            'id_telegram' => $request->id_telegram,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'jabatan' => $request->jabatan,

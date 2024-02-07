@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pengajuan_izin', function (Blueprint $table) {
             $table->id();
             $table->string('email');
-            $table->string('tanggal_izin');
+            $table->date('tanggal_izin');
             $table->string('status');
             $table->string('keterangan');
             $table->string('evident')->nullable();

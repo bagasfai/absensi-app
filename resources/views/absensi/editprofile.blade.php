@@ -47,6 +47,11 @@
         <input type="password" class="form-control" name="password" placeholder="Password" autocomplete="off">
       </div>
     </div>
+    <div class="form-group boxed">
+      <div class="input-wrapper">
+        <input type="id_telegram" class="form-control" value="{{ $karyawan->id_telegram }}" name="id_telegram" placeholder="ID Telegram" autocomplete="off">
+      </div>
+    </div>
     <div class="custom-file-upload" id="fileUpload1">
       <input type="file" name="foto" id="fileuploadInput" accept=".png, .jpg, .jpeg">
       <label for="fileuploadInput">
@@ -58,6 +63,7 @@
         </span>
       </label>
     </div>
+    <small class="text-red-600">*Kosongkan jika tidak ingin di ubah</small>
     <div class="form-group boxed">
       <div class="input-wrapper">
         <button type="submit" class="btn btn-primary btn-block">

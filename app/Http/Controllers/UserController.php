@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon;
 use App\Models\Absen;
 use App\Models\User;
 use App\Models\Jabatan;
+use App\Models\Pengajuan_Izin;
 use Symfony\Component\VarDumper\Caster\RedisCaster;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
@@ -19,6 +20,7 @@ class UserController extends Controller
 	{
 		$jabatan = Jabatan::all();
 		$user = User::orderBy('nama')->get();
+		$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
 
 		$email = auth()->user()->email;
 		$hariini = date("Y-m-d");
@@ -60,7 +62,7 @@ class UserController extends Controller
 		}
 
 		$cek = Absen::where('email', $email)->orderBy('id', 'desc')->first();
-		return view('user.index', compact('user', 'jabatan', 'selisihWaktuOut'));
+		return view('user.index', compact('user', 'jabatan', 'selisihWaktuOut', 'jumlahIzin'));
 	}
 
 	public function store(Request $request)
@@ -111,7 +113,7 @@ class UserController extends Controller
 		$nama = $request->nama;
 		$jabatan = $request->jabatan;
 		$email = $request->email;
-		$password = Hash::make('123456');
+		$password = $request->password;
 		$old_foto = $request->old_foto;
 
 		if ($request->hasFile('foto')) {

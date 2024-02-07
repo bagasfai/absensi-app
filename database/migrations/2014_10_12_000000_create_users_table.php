@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('jabatan');
+            $table->string('id_telegram');
             $table->string('foto')->nullable();
             $table->rememberToken();
             $table->timestamps();

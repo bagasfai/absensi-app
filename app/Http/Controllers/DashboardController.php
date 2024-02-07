@@ -27,7 +27,7 @@ class DashboardController extends Controller
 			->orderBy('id', 'desc')
 			->first();
 
-		$latestEntryOut = Absen::select('*', DB::raw('CONCAT(tanggal_keluar, " ", jam_keluar) as datetime'))
+		$latestEntryOut = Absen::select('*', DB::raw('CONCAT(tanggal, " ", jam_keluar) as datetime'))
 			->where('email', $email)
 			->orderBy('id', 'desc')
 			->first();
@@ -44,7 +44,7 @@ class DashboardController extends Controller
 			$selisihWaktuOut = $currentDateTime->diffInHours($lastEntryDateTimeOut);
 		} else {
 			$lastEntryDateTimeOut = "";
-			$selisihWaktuOut = "";
+			$selisihWaktuOut = 24;
 		}
 
 		$cek = Absen::where('email', $email)->orderBy('id', 'desc')->first();
@@ -88,6 +88,7 @@ class DashboardController extends Controller
 		$bulan = date('m') * 1;
 		$hariini =  date("Y-m-d");
 		$user = User::count();
+		$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
 		$rekapAbsen = Absen::selectRaw('COUNT(email) AS jumlah_hadir')
 			->where('tanggal', $hariini)
 			->whereNotNull('jam_masuk')
@@ -101,6 +102,6 @@ class DashboardController extends Controller
 			->whereRaw('YEAR(tanggal_izin) = ?', [$tahun])
 			->first();
 
-		return view('dashboardadmin', compact('rekapAbsen', 'rekapIzin', 'user'));
+		return view('dashboardadmin', compact('rekapAbsen', 'rekapIzin', 'user', 'jumlahIzin'));
 	}
 }

@@ -13,17 +13,25 @@
     @endif
 
     <!-- Perner -->
-    <div>
+    <div class="mt-4">
       <x-input-label for="perner" :value="__('Perner')" />
       <x-text-input id="perner" class="block mt-1 w-full" type="text" name="perner" :value="old('perner')" required autofocus autocomplete="off" />
+      <small class="text-red-400">*kosongkan jika tidak ada</small>
       <x-input-error :messages="$errors->get('perner')" class="mt-2" />
     </div>
 
     <!-- Name -->
-    <div>
-      <x-input-label for="nama" :value="__('Name')" />
+    <div class="mt-4">
+      <x-input-label for="nama" :value="__('Nama')" />
       <x-text-input id="nama" class="block mt-1 w-full" type="text" name="nama" :value="old('nama')" required autofocus autocomplete="off" />
       <x-input-error :messages="$errors->get('nama')" class="mt-2" />
+    </div>
+
+    <!-- Telegram -->
+    <div class="mt-4">
+      <x-input-label for="id_telegram" :value="__('ID Telegram')" />
+      <x-text-input id="id_telegram" class="block mt-1 w-full" type="text" name="id_telegram" :value="old('id_telegram')" required autofocus autocomplete="off" />
+      <x-input-error :messages="$errors->get('id_telegram')" class="mt-2" />
     </div>
 
     <!-- Jabatan -->
@@ -34,6 +42,7 @@
         <option value="OFFICE">Office</option>
         <option value="MANAJER AREA">Manajer Area</option>
         <option value="DIREKSI">Direksi</option>
+        <option value="SECURITY">Security</option>
         <option value="KORLAP">Korlap</option>
       </select>
     </div>

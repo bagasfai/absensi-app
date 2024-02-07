@@ -163,6 +163,19 @@
 
           <div class="row">
             <div class="col-12">
+              <div class="input-icon mb-3">
+                <span class="input-icon-addon">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-telegram" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" /></svg>
+                </span>
+                <input type="number" nama="id_telegram" id="id_telegram" class="form-control" placeholder="ID Telegram" fdprocessedid="9ar8xn">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-12">
               <div class="mb-3">
                 <input type="file" name="foto" id="foto" class="form-control">
               </div>
