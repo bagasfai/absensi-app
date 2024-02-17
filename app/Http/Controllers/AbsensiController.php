@@ -410,7 +410,7 @@ class AbsensiController extends Controller
 
     $dataizin = Pengajuan_Izin::where('email', $email)->get();
 
-    return view('absensi.izin', compact('dataizin', 'selisihWaktuOut'));
+    return view('absensi.izin.izin', compact('dataizin', 'selisihWaktuOut'));
   }
 
   public function buatizin()
@@ -456,7 +456,7 @@ class AbsensiController extends Controller
 
     $cek = Absen::where('email', $email)->orderBy('id', 'desc')->first();
 
-    return view('absensi.buatizin', compact('selisihWaktuOut'));
+    return view('absensi.izin.buatizin', compact('selisihWaktuOut'));
   }
 
   public function storeizin(Request $request)
@@ -533,13 +533,83 @@ class AbsensiController extends Controller
     return view('absen.showmap', compact('absen'));
   }
 
-  public function laporan()
+  public function laporan(Request $request)
   {
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     $user = User::orderBy('nama')->get();
     $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
 
-    return view('absensi.laporan', compact('namabulan', 'user', 'jumlahIzin'));
+    $email = $request->email;
+    $bulan = $request->bulan;
+    $tahun = $request->tahun;
+
+    $absen = Absen::where('email', $email)
+      ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+      ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+      ->orderBy('tanggal')
+      ->get();
+
+    return view('absensi.laporan.laporan', compact('namabulan', 'user', 'jumlahIzin', 'absen'));
+  }
+
+  public function previewDataLaporan(Request $request)
+  {
+    $email = $request->email;
+    $bulan = $request->bulan;
+    $tahun = $request->tahun;
+
+    // Fetch the preview data based on the selected employee's email, month, and year
+    $previewData = Absen::where('email', $email)
+      ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+      ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+      ->get();
+
+    return response()->json($previewData);
+  }
+
+  public function previewDataRekap(Request $request)
+  {
+    $bulan = $request->bulan;
+    $tahun = $request->tahun;
+
+    $previewData = Absen::selectRaw('email, nama, 
+    MAX(IF(DAY(tanggal) = 1, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_1,
+    MAX(IF(DAY(tanggal) = 2, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_2,
+    MAX(IF(DAY(tanggal) = 3, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_3,
+    MAX(IF(DAY(tanggal) = 4, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_4,
+    MAX(IF(DAY(tanggal) = 5, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_5,
+    MAX(IF(DAY(tanggal) = 6, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_6,
+    MAX(IF(DAY(tanggal) = 7, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_7,
+    MAX(IF(DAY(tanggal) = 8, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_8,
+    MAX(IF(DAY(tanggal) = 9, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_9,
+    MAX(IF(DAY(tanggal) = 10, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_10,
+    MAX(IF(DAY(tanggal) = 11, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_11,
+    MAX(IF(DAY(tanggal) = 12, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_12,
+    MAX(IF(DAY(tanggal) = 13, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_13,
+    MAX(IF(DAY(tanggal) = 14, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_14,
+    MAX(IF(DAY(tanggal) = 15, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_15,
+    MAX(IF(DAY(tanggal) = 16, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_16,
+    MAX(IF(DAY(tanggal) = 17, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_17,
+    MAX(IF(DAY(tanggal) = 18, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_18,
+    MAX(IF(DAY(tanggal) = 19, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_19,
+    MAX(IF(DAY(tanggal) = 20, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_20,
+    MAX(IF(DAY(tanggal) = 21, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_21,
+    MAX(IF(DAY(tanggal) = 22, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_22,
+    MAX(IF(DAY(tanggal) = 23, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_23,
+    MAX(IF(DAY(tanggal) = 24, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_24,
+    MAX(IF(DAY(tanggal) = 25, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_25,
+    MAX(IF(DAY(tanggal) = 26, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_26,
+    MAX(IF(DAY(tanggal) = 27, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_27,
+    MAX(IF(DAY(tanggal) = 28, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_28,
+    MAX(IF(DAY(tanggal) = 29, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_29,
+    MAX(IF(DAY(tanggal) = 30, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_30,
+    MAX(IF(DAY(tanggal) = 31, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_31')
+      ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+      ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+      ->groupByRaw('email,nama')
+      ->get();
+
+    return response()->json($previewData);
   }
 
   public function cetaklaporan(Request $request)
@@ -561,18 +631,57 @@ class AbsensiController extends Controller
       header("Content-type: application/vnd-ms-excel");
       // mendefinisikan nama file export "hasil-export.xls"
       header("Content-Disposition: attachment; filename=Laporan Absensi $time.xls");
-      return view('absensi.cetaklaporanexcel', compact('bulan', 'tahun', 'namabulan', 'user', 'absen'));
+      return view('absensi.laporan.cetaklaporanexcel', compact('bulan', 'tahun', 'namabulan', 'user', 'absen'));
     }
 
-    return view('absensi.cetaklaporan', compact('bulan', 'tahun', 'namabulan', 'user', 'absen'));
+    return view('absensi.laporan.cetaklaporan', compact('bulan', 'tahun', 'namabulan', 'user', 'absen'));
   }
 
-  public function rekap()
+  public function rekap(Request $request)
   {
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    $bulan = $request->bulan;
+    $tahun = $request->tahun;
 
-    return view('absensi.rekap', compact('namabulan', 'jumlahIzin'));
+    $rekap = Absen::selectRaw('email, nama, 
+    MAX(IF(DAY(tanggal) = 1, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_1,
+    MAX(IF(DAY(tanggal) = 2, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_2,
+    MAX(IF(DAY(tanggal) = 3, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_3,
+    MAX(IF(DAY(tanggal) = 4, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_4,
+    MAX(IF(DAY(tanggal) = 5, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_5,
+    MAX(IF(DAY(tanggal) = 6, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_6,
+    MAX(IF(DAY(tanggal) = 7, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_7,
+    MAX(IF(DAY(tanggal) = 8, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_8,
+    MAX(IF(DAY(tanggal) = 9, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_9,
+    MAX(IF(DAY(tanggal) = 10, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_10,
+    MAX(IF(DAY(tanggal) = 11, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_11,
+    MAX(IF(DAY(tanggal) = 12, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_12,
+    MAX(IF(DAY(tanggal) = 13, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_13,
+    MAX(IF(DAY(tanggal) = 14, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_14,
+    MAX(IF(DAY(tanggal) = 15, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_15,
+    MAX(IF(DAY(tanggal) = 16, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_16,
+    MAX(IF(DAY(tanggal) = 17, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_17,
+    MAX(IF(DAY(tanggal) = 18, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_18,
+    MAX(IF(DAY(tanggal) = 19, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_19,
+    MAX(IF(DAY(tanggal) = 20, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_20,
+    MAX(IF(DAY(tanggal) = 21, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_21,
+    MAX(IF(DAY(tanggal) = 22, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_22,
+    MAX(IF(DAY(tanggal) = 23, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_23,
+    MAX(IF(DAY(tanggal) = 24, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_24,
+    MAX(IF(DAY(tanggal) = 25, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_25,
+    MAX(IF(DAY(tanggal) = 26, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_26,
+    MAX(IF(DAY(tanggal) = 27, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_27,
+    MAX(IF(DAY(tanggal) = 28, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_28,
+    MAX(IF(DAY(tanggal) = 29, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_29,
+    MAX(IF(DAY(tanggal) = 30, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_30,
+    MAX(IF(DAY(tanggal) = 31, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_31')
+      ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+      ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+      ->groupByRaw('email,nama')
+      ->get();
+
+    return view('absensi.laporan.rekap', compact('namabulan', 'jumlahIzin', 'rekap'));
   }
 
   public function cetakrekap(Request $request)
@@ -627,7 +736,7 @@ class AbsensiController extends Controller
     }
 
 
-    return view('absensi.cetakrekap', compact('bulan', 'tahun', 'rekap', 'namabulan'));
+    return view('absensi.laporan.cetakrekap', compact('bulan', 'tahun', 'rekap', 'namabulan'));
   }
 
   public function izinsakit(Request $request)
@@ -644,7 +753,7 @@ class AbsensiController extends Controller
     $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
 
     // $izinsakit->appends($request->all());
-    return view('absensi.izinsakit', compact('izinsakit', 'jumlahIzin'));
+    return view('absensi.izin.izinsakit', compact('izinsakit', 'jumlahIzin'));
   }
 
   public function action(Request $request)

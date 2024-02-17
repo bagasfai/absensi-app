@@ -120,7 +120,7 @@
                           @endif
                         </td>
                         <td>
-                          <a href="#" class="btn btn-sm btn-info btn-detail" data-toggle="modal" data-target="#modal-izindetail" data-evident="{{ $d->evident }}">EVIDENT</a>
+                          <a href="#" class="btn btn-sm btn-info btn-detail" data-evident="{{ $d->evident }}">EVIDENT</a>
                         </td>
                         <td>
                           @if($d->status_approved == 0)
@@ -154,6 +154,7 @@
   </div>
 </div>
 
+{{-- MODAL APPROVAL --}}
 <div class="modal modal-blur fade" id="modal-izinsakit" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -200,6 +201,7 @@
   </div>
 </div>
 
+{{-- MODAL EVIDENT --}}
 <div class="modal modal-blur fade" id="modal-izindetail" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -213,6 +215,7 @@
     </div>
   </div>
 </div>
+
 
 @endsection
 

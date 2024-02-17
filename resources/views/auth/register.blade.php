@@ -15,7 +15,7 @@
     <!-- Perner -->
     <div class="mt-4">
       <x-input-label for="perner" :value="__('Perner')" />
-      <x-text-input id="perner" class="block mt-1 w-full" type="text" name="perner" :value="old('perner')" required autofocus autocomplete="off" />
+      <x-text-input id="perner" class="block mt-1 w-full" type="text" name="perner" :value="old('perner')" autofocus autocomplete="off" />
       <small class="text-red-400">*kosongkan jika tidak ada</small>
       <x-input-error :messages="$errors->get('perner')" class="mt-2" />
     </div>

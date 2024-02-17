@@ -63,6 +63,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/absen/cetaklaporan', [AbsensiController::class, 'cetaklaporan'])->name('absen.cetaklaporan');
     Route::get('/absen/rekap', [AbsensiController::class, 'rekap'])->name('absen.rekap');
     Route::post('/absen/cetakrekap', [AbsensiController::class, 'cetakrekap'])->name('absen.cetakrekap');
+    Route::post('/absen/laporan/preview-laporan', [AbsensiController::class, 'previewDataLaporan'])->name('absen.previewlaporan');
+    Route::post('/absen/laporan/preview-rekap', [AbsensiController::class, 'previewDataRekap'])->name('absen.previewrekap');
 
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

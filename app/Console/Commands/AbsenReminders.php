@@ -31,12 +31,17 @@ class AbsenReminders extends Command
 
 	public function handle()
 	{
-		// Replace 'YOUR_CHAT_ID' with the actual chat ID where you want to send reminders
-		$chatId = '649920017';
 
 		// Get current date and times
 		$today = Carbon::now()->toDateString();
 		$currentTime = Carbon::now();
+		$todayCarbon = Carbon::now();
+
+		// Skip sending reminders on Sundays
+		if ($todayCarbon->dayOfWeek === Carbon::SUNDAY) {
+			$this->info('Today is Sunday. Skipping reminders.');
+			return;
+		}
 
 		// Retrieve all users in the system
 		$allUsers = User::pluck('email');
@@ -58,28 +63,36 @@ class AbsenReminders extends Command
 			return "Reminder: Anda belum melakukan absen keluar. harap segera melakukan absen keluar.";
 		};
 
+		// Retrieve all users in the system with their id_telegram
+		$usersWithTelegram = User::whereNotNull('id_telegram')->get(['email', 'id_telegram']);
+
 		// Send reminders for clock in to users who missed attendance
 		foreach ($missingAttendanceUsers as $email) {
-			$telegramController = app(TelegramController::class);
+			// Find the user's id_telegram
+			$userTelegram = $usersWithTelegram->firstWhere('email', $email);
 
-			// Check if the user has clocked in but not clocked out
-			$userHasClockedInButNotOut = Absen::where('email', $email)
-				->where('tanggal', $today)
-				->whereNotNull('jam_masuk')
-				->whereNull('jam_keluar')
-				->exists();
+			if ($userTelegram) {
+				$telegramController = app(TelegramController::class);
 
-			// Send clock in reminder at 9 AM
-			if ($currentTime->hour == 9) {
-				$telegramController->sendReminderMessage($chatId, $clockInReminderMessage($email));
+				// Check if the user has clocked in but not clocked out
+				$userHasClockedInButNotOut = Absen::where('email', $email)
+					->where('tanggal', $today)
+					->whereNotNull('jam_masuk')
+					->whereNull('jam_keluar')
+					->exists();
+
+				// Send clock in reminder at 9 AM
+				if ($currentTime->hour == 9) {
+					$telegramController->sendReminderMessage($userTelegram->id_telegram, $clockInReminderMessage($email));
+				}
+
+				// Send clock out reminder at 5 PM only if the user has clocked in but not out
+				if ($currentTime->hour == 17 && $userHasClockedInButNotOut) {
+					$telegramController->sendReminderMessage($userTelegram->id_telegram, $clockOutReminderMessage($email));
+				}
 			}
 
-			// Send clock out reminder at 5 PM only if the user has clocked in but not out
-			if ($currentTime->hour == 17 && $userHasClockedInButNotOut) {
-				$telegramController->sendReminderMessage($chatId, $clockOutReminderMessage($email));
-			}
+			$this->info('Reminders sent successfully.');
 		}
-
-		$this->info('Reminders sent successfully.');
 	}
 }

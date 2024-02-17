@@ -127,9 +127,14 @@ class UserController extends Controller
 				'nama' => $nama,
 				'jabatan' => $jabatan,
 				'email' => $email,
-				'password' => $password,
 				'foto' => $foto,
 			];
+
+			// Hash the password if it's not empty
+			if (!empty($password)) {
+				$data['password'] = Hash::make($password);
+			}
+
 			$update = User::where('email', $email)->update($data);
 			if ($update) {
 				if ($request->hasFile('foto')) {
