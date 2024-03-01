@@ -572,41 +572,33 @@ class AbsensiController extends Controller
     $bulan = $request->bulan;
     $tahun = $request->tahun;
 
-    $previewData = Absen::selectRaw('email, nama, 
-    MAX(IF(DAY(tanggal) = 1, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_1,
-    MAX(IF(DAY(tanggal) = 2, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_2,
-    MAX(IF(DAY(tanggal) = 3, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_3,
-    MAX(IF(DAY(tanggal) = 4, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_4,
-    MAX(IF(DAY(tanggal) = 5, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_5,
-    MAX(IF(DAY(tanggal) = 6, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_6,
-    MAX(IF(DAY(tanggal) = 7, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_7,
-    MAX(IF(DAY(tanggal) = 8, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_8,
-    MAX(IF(DAY(tanggal) = 9, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_9,
-    MAX(IF(DAY(tanggal) = 10, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_10,
-    MAX(IF(DAY(tanggal) = 11, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_11,
-    MAX(IF(DAY(tanggal) = 12, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_12,
-    MAX(IF(DAY(tanggal) = 13, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_13,
-    MAX(IF(DAY(tanggal) = 14, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_14,
-    MAX(IF(DAY(tanggal) = 15, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_15,
-    MAX(IF(DAY(tanggal) = 16, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_16,
-    MAX(IF(DAY(tanggal) = 17, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_17,
-    MAX(IF(DAY(tanggal) = 18, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_18,
-    MAX(IF(DAY(tanggal) = 19, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_19,
-    MAX(IF(DAY(tanggal) = 20, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_20,
-    MAX(IF(DAY(tanggal) = 21, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_21,
-    MAX(IF(DAY(tanggal) = 22, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_22,
-    MAX(IF(DAY(tanggal) = 23, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_23,
-    MAX(IF(DAY(tanggal) = 24, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_24,
-    MAX(IF(DAY(tanggal) = 25, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_25,
-    MAX(IF(DAY(tanggal) = 26, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_26,
-    MAX(IF(DAY(tanggal) = 27, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_27,
-    MAX(IF(DAY(tanggal) = 28, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_28,
-    MAX(IF(DAY(tanggal) = 29, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_29,
-    MAX(IF(DAY(tanggal) = 30, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_30,
-    MAX(IF(DAY(tanggal) = 31, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_31')
+    $totalDays = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
+
+    $selectClause = 'email, nama';
+
+    for ($day = 1; $day <= $totalDays; $day++) {
+      $selectClause .= ", MAX(
+        CASE 
+          WHEN DAY(tanggal) = $day THEN 
+            CASE 
+              WHEN status = 'H' THEN CONCAT_WS('-', COALESCE(jam_masuk, ''), COALESCE(jam_keluar, '')) 
+              WHEN status = 'I' THEN 'I' 
+              WHEN status = 'S' THEN 'S'
+              ELSE ''
+            END 
+          ELSE 
+            CASE 
+              WHEN DAYNAME(CONCAT(YEAR(tanggal), '-', MONTH(tanggal), '-', $day)) = 'Sunday' THEN 'LIBUR'
+              ELSE '' 
+            END
+        END
+      ) as tgl_$day";
+    }
+
+    $previewData = Absen::selectRaw($selectClause)
       ->whereRaw('MONTH(tanggal) = ?', [$bulan])
       ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-      ->groupByRaw('email,nama')
+      ->groupByRaw('email, nama')
       ->get();
 
     return response()->json($previewData);
@@ -637,95 +629,64 @@ class AbsensiController extends Controller
     return view('absensi.laporan.cetaklaporan', compact('bulan', 'tahun', 'namabulan', 'user', 'absen'));
   }
 
-  public function rekap(Request $request)
+  public function rekap()
   {
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
-    $bulan = $request->bulan;
-    $tahun = $request->tahun;
 
-    $rekap = Absen::selectRaw('email, nama, 
-    MAX(IF(DAY(tanggal) = 1, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_1,
-    MAX(IF(DAY(tanggal) = 2, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_2,
-    MAX(IF(DAY(tanggal) = 3, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_3,
-    MAX(IF(DAY(tanggal) = 4, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_4,
-    MAX(IF(DAY(tanggal) = 5, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_5,
-    MAX(IF(DAY(tanggal) = 6, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_6,
-    MAX(IF(DAY(tanggal) = 7, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_7,
-    MAX(IF(DAY(tanggal) = 8, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_8,
-    MAX(IF(DAY(tanggal) = 9, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_9,
-    MAX(IF(DAY(tanggal) = 10, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_10,
-    MAX(IF(DAY(tanggal) = 11, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_11,
-    MAX(IF(DAY(tanggal) = 12, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_12,
-    MAX(IF(DAY(tanggal) = 13, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_13,
-    MAX(IF(DAY(tanggal) = 14, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_14,
-    MAX(IF(DAY(tanggal) = 15, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_15,
-    MAX(IF(DAY(tanggal) = 16, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_16,
-    MAX(IF(DAY(tanggal) = 17, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_17,
-    MAX(IF(DAY(tanggal) = 18, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_18,
-    MAX(IF(DAY(tanggal) = 19, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_19,
-    MAX(IF(DAY(tanggal) = 20, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_20,
-    MAX(IF(DAY(tanggal) = 21, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_21,
-    MAX(IF(DAY(tanggal) = 22, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_22,
-    MAX(IF(DAY(tanggal) = 23, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_23,
-    MAX(IF(DAY(tanggal) = 24, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_24,
-    MAX(IF(DAY(tanggal) = 25, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_25,
-    MAX(IF(DAY(tanggal) = 26, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_26,
-    MAX(IF(DAY(tanggal) = 27, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_27,
-    MAX(IF(DAY(tanggal) = 28, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_28,
-    MAX(IF(DAY(tanggal) = 29, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_29,
-    MAX(IF(DAY(tanggal) = 30, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_30,
-    MAX(IF(DAY(tanggal) = 31, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_31')
-      ->whereRaw('MONTH(tanggal) = ?', [$bulan])
-      ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-      ->groupByRaw('email,nama')
-      ->get();
-
-    return view('absensi.laporan.rekap', compact('namabulan', 'jumlahIzin', 'rekap'));
+    return view('absensi.laporan.rekap', compact('namabulan', 'jumlahIzin'));
   }
 
   public function cetakrekap(Request $request)
   {
-    $bulan = $request->bulan;
+    $bulan = str_pad($request->bulan, 2, "0", STR_PAD_LEFT);
+    $bulans = $request->bulan;
     $tahun = $request->tahun;
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    $totalDays =  cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
 
-    $rekap = Absen::selectRaw('email, nama, 
-    MAX(IF(DAY(tanggal) = 1, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_1,
-    MAX(IF(DAY(tanggal) = 2, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_2,
-    MAX(IF(DAY(tanggal) = 3, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_3,
-    MAX(IF(DAY(tanggal) = 4, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_4,
-    MAX(IF(DAY(tanggal) = 5, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_5,
-    MAX(IF(DAY(tanggal) = 6, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_6,
-    MAX(IF(DAY(tanggal) = 7, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_7,
-    MAX(IF(DAY(tanggal) = 8, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_8,
-    MAX(IF(DAY(tanggal) = 9, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_9,
-    MAX(IF(DAY(tanggal) = 10, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_10,
-    MAX(IF(DAY(tanggal) = 11, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_11,
-    MAX(IF(DAY(tanggal) = 12, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_12,
-    MAX(IF(DAY(tanggal) = 13, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_13,
-    MAX(IF(DAY(tanggal) = 14, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_14,
-    MAX(IF(DAY(tanggal) = 15, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_15,
-    MAX(IF(DAY(tanggal) = 16, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_16,
-    MAX(IF(DAY(tanggal) = 17, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_17,
-    MAX(IF(DAY(tanggal) = 18, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_18,
-    MAX(IF(DAY(tanggal) = 19, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_19,
-    MAX(IF(DAY(tanggal) = 20, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_20,
-    MAX(IF(DAY(tanggal) = 21, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_21,
-    MAX(IF(DAY(tanggal) = 22, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_22,
-    MAX(IF(DAY(tanggal) = 23, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_23,
-    MAX(IF(DAY(tanggal) = 24, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_24,
-    MAX(IF(DAY(tanggal) = 25, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_25,
-    MAX(IF(DAY(tanggal) = 26, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_26,
-    MAX(IF(DAY(tanggal) = 27, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_27,
-    MAX(IF(DAY(tanggal) = 28, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_28,
-    MAX(IF(DAY(tanggal) = 29, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_29,
-    MAX(IF(DAY(tanggal) = 30, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_30,
-    MAX(IF(DAY(tanggal) = 31, IFNULL(CONCAT(jam_masuk, "-", jam_keluar), ""), "")) as tgl_31')
+    $rekap = Absen::select([
+      "email",
+      "nama",
+      "status",
+      "tanggal",
+      "jam_masuk",
+      "jam_keluar",
+      DB::raw("DAYNAME(tanggal) AS hari"),
+      DB::raw("DAY(tanggal) AS date"),
+    ])
       ->whereRaw('MONTH(tanggal) = ?', [$bulan])
       ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-      ->groupByRaw('email,nama')
+      // ->groupByRaw('email, nama')
       ->get();
+
+    $result = [];
+    foreach ($rekap as $item) {
+
+      if (!array_key_exists($item->email, $result)) {
+        $result[$item->email] = [
+          "nama" => $item->nama,
+          "email" => $item->email,
+        ];
+
+        for ($day = 1; $day <= $totalDays; $day++) {
+          $today = Carbon::createFromFormat("Ymj", "{$tahun}{$bulan}{$day}");
+
+          if ($today->englishDayOfWeek === "Sunday") {
+            $result[$item->email][$day] = "LIBUR";
+          } else {
+            $result[$item->email][$day] = null;
+          }
+        }
+      }
+
+      $result[$item->email][$item->date] = match ($item->status) {
+        "H", "0" => "{$item->jam_masuk}-{$item->jam_keluar}",
+        'I' => 'I',
+        'S' => 'S',
+        null => "A"
+      };
+    }
 
     if (isset($_POST['exportExcel'])) {
       $time = date("d-m-Y H:i:s");
@@ -735,8 +696,7 @@ class AbsensiController extends Controller
       header("Content-Disposition: attachment; filename=Rekap Absensi $time.xls");
     }
 
-
-    return view('absensi.laporan.cetakrekap', compact('bulan', 'tahun', 'rekap', 'namabulan'));
+    return view('absensi.laporan.cetakrekap', compact('bulan', 'tahun', 'rekap', 'namabulan', 'bulans', 'result', 'totalDays'));
   }
 
   public function izinsakit(Request $request)

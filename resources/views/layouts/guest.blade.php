@@ -7,6 +7,7 @@
 
   <title>{{ config('app.name', 'Absensi') }}</title>
 
+  {{-- <link rel="icon" href="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png"> --}}
   <link rel="icon" href="{{asset('assets/img/web-logo.png')}}">
 
   <!-- Fonts -->
@@ -28,6 +29,7 @@
   <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900">
     <div>
       <a href="/">
+        {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" alt="" height="200" width="200"> --}}
         <img src="{{asset('assets/img/web-logo.png')}}" alt="" height="200" width="200">
       </a>
     </div>

@@ -9,6 +9,7 @@ $path = Storage::url('/uploads/background-card.png');
         <!-- Logo -->
         <div class="shrink-0 flex items-center">
           <a href="{{ route('absen.dashboard') }}">
+            {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" alt="" height="150" width="150"> --}}
             <img src="{{asset('assets/img/web-logo.png')}}" alt="" height="150" width="150">
           </a>
         </div>

@@ -20,7 +20,9 @@
   <link href="{{asset('tabler/dist/css/tabler-vendors.min.css?1692870487')}}" rel="stylesheet" />
   <link href="{{asset('tabler/dist/css/demo.min.css?1692870487')}}" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" href="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png">
+
+  {{-- <link rel="icon" href="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png"> --}}
+  <link rel="icon" href="{{asset('assets/img/web-logo.png')}}">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.bunny.net">
@@ -53,7 +55,8 @@
               <a href="." class="navbar-brand navbar-brand-autodark"><img src="./static/logo.svg" height="36" alt=""></a>
             </div>
             <a href="#">
-              <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" alt="" height="200" width="200">
+              {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" alt="" height="200" width="200"> --}}
+              <img src="{{asset('assets/img/web-logo.png')}}" alt="" height="200" width="200">
             </a>
             <div class="card card-md">
               <div class="card-body">

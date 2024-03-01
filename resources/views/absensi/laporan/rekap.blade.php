@@ -96,12 +96,20 @@
                           <table class="table table-bordered" id="dataTable">
                             <thead>
                               <tr>
-                                <th rowspan="2" class="text-center">Email</th>
-                                <th rowspan="2" class="text-center">Nama</th>
-                                <th colspan="31" class="text-center">Tanggal</th>
-                                <th rowspan="2" class="text-center">TH</th>
+                                <th rowspan="3" class="text-center">Email</th>
+                                <th rowspan="3" class="text-center">Nama</th>
+                                <th class="text-center tanggal">Tanggal</th>
+                                <th rowspan="3">TM</th>
+                                <th rowspan="3">TK</th>
+                                <th rowspan="3">TI</th>
+                                <th rowspan="3">TS</th>
+                                <th rowspan="3">TA</th>
+                                <th rowspan="3">TH</th>
                               </tr>
                               <tr id="dateHeaders">
+                                <!-- Date headers will be dynamically inserted here -->
+                              </tr>
+                              <tr id="dateHeaders2">
                                 <!-- Date headers will be dynamically inserted here -->
                               </tr>
                             </thead>
@@ -134,8 +142,10 @@
       e.preventDefault();
       let bulan = $('#bulan').val();
       let tahun = $('#tahun').val();
+      let totalDays = getTotalDaysInMonth(tahun, bulan);
+      let total = totalDays * 2;
 
-      console.log('Bulan', bulan, 'Tahun: ', tahun);
+      $('#dataTable .tanggal').attr('colspan', total);
 
       // Check if bulan, and tahun are selected
       if (bulan == "" || tahun == "") {
@@ -150,10 +160,6 @@
         return false;
       }
 
-      fetchPreviewData(bulan, tahun);
-    });
-
-    function fetchPreviewData(bulan, tahun) {
       $.ajax({
         url: "{{ route('absen.previewrekap') }}"
         , type: 'POST'
@@ -166,14 +172,22 @@
         , success: function(data) {
           let previewTableBody = $('#previewTableBody');
           let dateHeadersRow = $('#dateHeaders');
+          let dateHeadersRow2 = $('#dateHeaders2');
 
           // Clear previous data
           previewTableBody.empty();
           dateHeadersRow.empty();
+          dateHeadersRow2.empty();
 
           // Append date headers
-          for (let i = 1; i <= 31; i++) {
-            dateHeadersRow.append(`<th class="text-center">${i}</th>`);
+          for (let i = 1; i <= totalDays; i++) {
+            dateHeadersRow.append(
+              `<th colspan="2" class="text-center">${i}</th>`
+            );
+            dateHeadersRow2.append(
+              `<th>Masuk</th>
+              <th>Keluar</th>`
+            );
           }
 
           // Append table data
@@ -181,17 +195,78 @@
             let html = `<tr>
                         <td>${employee.email}</td>
                         <td>${employee.nama}</td>`;
+
             let totalhadir = 0; // Initialize total attendance counter
-            for (let i = 1; i <= 31; i++) {
+            let totalmasuk = 0;
+            let totalkeluar = 0;
+            let totalizin = 0;
+            let totalsakit = 0;
+            let totalalpha = 0;
+
+            for (let i = 1; i <= totalDays; i++) {
               let tgl = "tgl_" + i;
-              let hadir = employee[tgl] ? employee[tgl].split("-") : ['', ''];
-              html += `<td>${hadir[0]} ${hadir[1]}</td>`;
-              // Count attendance if the value is not empty
-              if (employee[tgl]) {
-                totalhadir++;
+              let hadir = ['', ''];
+              let tanggal = employee[tgl];
+              let cekConcat;
+
+              if (tanggal !== undefined && tanggal !== null) {
+                cekConcat = tanggal.indexOf('-');
+              } else {
+                cekConcat = -1; // Set cekConcat to -1 if tanggal is undefined or null
               }
+
+              if (tanggal !== undefined && tanggal !== null) {
+                // Check if $d->tgl contains '-' to determine if it's concatenated
+                if (cekConcat != -1) {
+                  hadir = tanggal.split("-");
+                  // If it's concatenated, count as Masuk and Keluar
+                  if (hadir[0] != '') {
+                    totalmasuk++;
+                    totalhadir++;
+                  }
+
+                  if (hadir[1] != '') {
+                    totalkeluar++;
+                  }
+                } else {
+                  // If it's a single value, count based on its type
+                  switch (tanggal) {
+                    case 'I':
+                      hadir[0] = tanggal;
+                      hadir[1] = tanggal;
+                      totalizin++;
+                      totalhadir++;
+                      break;
+                    case 'S':
+                      hadir[0] = tanggal;
+                      hadir[1] = tanggal;
+                      totalsakit++;
+                      totalhadir++;
+                      break;
+                    case 'LIBUR':
+                      hadir[0] = tanggal;
+                      hadir[1] = tanggal;
+                      break;
+                    default:
+                      totalalpha++;
+                      break;
+                  }
+                }
+              }
+
+              html += `<td>${hadir[0]}</td>`;
+              html += `<td>${hadir[1]}</td>`;
             }
-            html += `<td>${totalhadir}</td></tr>`;
+            html +=
+              `
+            <td>${totalmasuk}</td>
+            <td>${totalkeluar}</td>
+            <td>${totalizin}</td>
+            <td>${totalsakit}</td>
+            <td>${totalalpha}</td>
+            <td>${totalhadir}</td>
+            
+            </tr>`;
             previewTableBody.append(html);
           });
 
@@ -201,6 +276,16 @@
           console.error('Error fetching preview data:', error);
         }
       });
+
+      // fetchPreviewData(bulan, tahun);
+    });
+
+    function getTotalDaysInMonth(year, month) {
+      // Months in JavaScript are 0-based (January is 0, February is 1, etc.)
+      // So, we subtract 1 from the month number provided by the user
+      // Then, we create a new Date object for the first day of the next month
+      // and set its day to 0, which gives us the last day of the current month
+      return new Date(year, month, 0).getDate();
     }
   });
 

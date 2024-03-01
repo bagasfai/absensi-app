@@ -70,12 +70,14 @@
     <table style="width: 100%">
       <tr>
         <td style="width:30px;">
-          <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" width="120" height="70" alt="">
+          {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" width="120" height="70" alt=""> --}}
+          <img src="{{asset('assets/img/web-logo.png')}}" width="120" height="70" alt="">
         </td>
         <td>
           <span id="title">LAPORAN ABSENSI KARYAWAN <br>
-            PERIODE {{ strtoupper($namabulan[$bulan]) }} {{ $tahun }} <br>
-            PT Satria Digital Sejahtera
+            PERIODE {{ strtoupper($namabulan[$bulans]) }} {{ $tahun }} <br>
+            {{-- PT Satria Digital Sejahtera --}}
+            PT Ainiyah Indomitra Sejahtera
           </span>
 
         </td>
@@ -85,48 +87,112 @@
     <table class="tablepresensi">
 
       <tr>
-        <th rowspan="2">Email</th>
-        <th rowspan="2">Nama</th>
-        <th colspan="31">Tanggal</th>
-        <th rowspan="2">TH</th>
+        <th rowspan="3">Email</th>
+        <th rowspan="3">Nama</th>
+        <th colspan="{{$totalDays * 2}}">Tanggal</th>
+        <th rowspan="3">TM</th>
+        <th rowspan="3">TK</th>
+        <th rowspan="3">TI</th>
+        <th rowspan="3">TS</th>
+        <th rowspan="3">TA</th>
+        <th rowspan="3">TH</th>
       </tr>
 
+      {{-- Tanggal --}}
       <tr>
         <?php 
-        for($i=1; $i<=31; $i++) {
+        for($i=1; $i<=$totalDays; $i++) {
         ?>
-        <th>{{$i}}</th>
+        <th colspan="2">{{$i}}</th>
+        <?php
+        }
+        ?>
+      </tr>
+      <tr>
+        <?php 
+        for($i=1; $i<=$totalDays; $i++) {
+        ?>
+        <th>Masuk</th>
+        <th>Keluar</th>
         <?php
         }
         ?>
       </tr>
 
-      @foreach ($rekap as $d)
+      @foreach ($result as $res => $d)
       <tr>
-        <td>{{$d->email}}</td>
-        <td>{{$d->nama}}</td>
+        <td>{{$d['email']}}</td>
+        <td>{{$d['nama']}}</td>
 
         <?php 
         $totalhadir = 0;
-        for($i=1; $i<=31; $i++) {
-          $tgl = "tgl_".$i;
+        $totalmasuk = 0;
+        $totalkeluar = 0;
+        $totalizin = 0;
+        $totalsakit = 0;
+        $totalalpha = 0;
 
-          if (empty($d->$tgl)) {
-            $hadir = ['', ''];
-            $totalhadir += 0;
-          } else {
-            $hadir = explode("-", $d->$tgl);
-            $totalhadir += 1;
-          }
-        ?>
-        <td>
+        for($i=1; $i <= $totalDays; $i++) {
+            $dayKey = (string)$i; // Convert $i to string to match keys
+
+            $tgl = "tgl_".$dayKey;
+            $hadir = ['', '']; // Default empty array for Masuk and Keluar
+
+            if (!empty($d[$dayKey])) {
+                // Check if $d->$tgl contains '-' to determine if it's concatenated
+                if (strpos($d[$dayKey], '-') !== false) {
+                    $hadir = explode("-", $d[$dayKey]);
+                    // If it's concatenated, count as Masuk and Keluar
+                    if($hadir[0] != '') {
+                        $totalmasuk++;
+                        $totalhadir++;
+                    }
+
+                    if($hadir[1] != '') {
+                        $totalkeluar++;
+                    }
+
+                } else {
+                    // If it's a single value, count based on its type
+                    switch ($d[$dayKey]) {
+                        case 'I':
+                            $hadir[0] = $d[$dayKey];
+                            $hadir[1] = $d[$dayKey];
+                            $totalizin++;
+                            $totalhadir++;
+                            break;
+                        case 'S':
+                            $hadir[0] = $d[$dayKey];
+                            $hadir[1] = $d[$dayKey];
+                            $totalsakit++;
+                            $totalhadir++;
+                            break;
+                        case 'LIBUR':
+                            $hadir[0] = $d[$dayKey];
+                            $hadir[1] = $d[$dayKey];
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                $totalalpha++;
+            }
+            ?>
+        <td class="text-center">
           {{$hadir[0]}}
+        </td>
+        <td class="text-center">
           {{$hadir[1]}}
         </td>
         <?php
         }
         ?>
-        <td>{{ $totalhadir }}</td>
+        <td class="text-center">{{ $totalmasuk }}</td>
+        <td class="text-center">{{ $totalkeluar }}</td>
+        <td class="text-center">{{ $totalizin }}</td>
+        <td class="text-center">{{ $totalsakit }}</td>
+        <td class="text-center">{{ $totalalpha }}</td>
+        <td class="text-center">{{ $totalhadir }}</td>
 
       </tr>
       @endforeach
