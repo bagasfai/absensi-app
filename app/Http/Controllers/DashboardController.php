@@ -108,7 +108,11 @@ class DashboardController extends Controller
 		} else {
 			$user = User::count();
 		}
-		$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
+		if (auth()->user()->jabatan == 'TEAM WAGNER') {
+			$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+		} else {
+			$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
+		}
 		$rekapAbsen = Absen::selectRaw('COUNT(email) AS jumlah_hadir')
 			->where('tanggal', $hariini)
 			->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])

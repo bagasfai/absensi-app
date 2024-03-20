@@ -14,18 +14,42 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Telegram\Bot\Laravel\Facades\Telegram;
 use App\Http\Controllers\TelegramController;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 
 class AbsensiController extends Controller
 {
-  public function index()
+
+  public function setPeriode(Request $request)
   {
+    $tanggal = $request->tanggal;
+    session(['periode' => $tanggal]);
+
+    return Redirect::back();
+  }
+
+  public function index(Request $request)
+  {
+    $tanggal = date('Y-m');
+    $periode = session('periode');
+    $query = Absen::query();
+
+    if ($periode) {
+      $query = Absen::whereRaw('DATE_FORMAT(tanggal, "%Y-%m") = ?', [$periode]);
+    }
+
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
-      $absen = Absen::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->get();
+      $absen = $query->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->get();
     } else {
       $absen = Absen::all();
     }
-    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    }
+
     return view('absensi.index', compact('absen', 'jumlahIzin'));
   }
 
@@ -517,14 +541,23 @@ class AbsensiController extends Controller
 
   public function monitor()
   {
-    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    }
+
     return view('absensi.monitor', compact('jumlahIzin'));
   }
 
   public function getpresensi(Request $request)
   {
     $tanggal = $request->tanggal;
-    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    }
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $absen = Absen::where('tanggal', $tanggal)
         ->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
@@ -533,6 +566,25 @@ class AbsensiController extends Controller
       $absen = Absen::where('tanggal', $tanggal)->get();
     }
     return view('absensi.getpresensi', compact('absen', 'jumlahIzin'));
+  }
+
+  public function getRekapPresensi(Request $request)
+  {
+    $tanggal = $request->tanggal;
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    }
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $absen = Absen::whereRaw('DATE_FORMAT(tanggal, "%Y-%m") = ?', [$tanggal])
+        ->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->get();
+    } else {
+      $absen = Absen::where('tanggal', $tanggal)->get();
+    }
+
+    return view('absensi.getrekappresensi', compact('absen', 'jumlahIzin'));
   }
 
   public function showmap(Request $request)
@@ -547,7 +599,11 @@ class AbsensiController extends Controller
   {
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     $user = User::orderBy('nama')->get();
-    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    }
 
     $email = $request->email;
     $bulan = $request->bulan;
@@ -667,7 +723,11 @@ class AbsensiController extends Controller
   public function rekap()
   {
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    }
 
     return view('absensi.laporan.rekap', compact('namabulan', 'jumlahIzin'));
   }
@@ -783,7 +843,11 @@ class AbsensiController extends Controller
       $izinsakit = $query->get();
     }
 
-    $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else {
+      $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
+    }
 
     // $izinsakit->appends($request->all());
     return view('absensi.izin.izinsakit', compact('izinsakit', 'jumlahIzin'));

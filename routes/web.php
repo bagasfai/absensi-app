@@ -58,6 +58,7 @@ Route::middleware('auth')->group(function () {
     // absensi
     Route::get('/absen/monitor', [AbsensiController::class, 'monitor'])->name('absen.monitor');
     Route::post('/getpresensi', [AbsensiController::class, 'getpresensi'])->name('absen.getabsen');
+    Route::post('/getrekappresensi', [AbsensiController::class, 'getRekapPresensi'])->name('absen.getRekapAbsen');
     Route::post('/showmap', [AbsensiController::class, 'showmap'])->name('absen.showmap');
     Route::get('/absen/laporan', [AbsensiController::class, 'laporan'])->name('absen.laporan');
     Route::post('/absen/cetaklaporan', [AbsensiController::class, 'cetaklaporan'])->name('absen.cetaklaporan');
@@ -65,7 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/absen/cetakrekap', [AbsensiController::class, 'cetakrekap'])->name('absen.cetakrekap');
     Route::post('/absen/laporan/preview-laporan', [AbsensiController::class, 'previewDataLaporan'])->name('absen.previewlaporan');
     Route::post('/absen/laporan/preview-rekap', [AbsensiController::class, 'previewDataRekap'])->name('absen.previewrekap');
-
+    Route::post('/setperiode', [AbsensiController::class, 'setPeriode'])->name('absen.setPeriode');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
