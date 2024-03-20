@@ -15,7 +15,7 @@
 <!-- * loader -->
 
 <!-- App Capsule -->
-<div id="" class="">
+<div id="" class="pb-1">
   <!-- appCapsule -->
   <div class="section mb-4" id="user-section">
     <div id="user-detail">
@@ -27,8 +27,9 @@
         @else
         @php
         // Default image path
-        $path = asset('assets/img/web-logo.png');
         // $path = 'https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png';
+        // $path = asset('assets/img/web-logo.png');
+        $path = asset('assets/img/app-logo.jpg');
         @endphp
         @endif
         <img src="{{ $path }}" alt="avatar" class="imaged w-24 h-16 bg-white" />
@@ -165,7 +166,7 @@
               Bulan Ini
             </a>
           </li>
-          @if(auth()->user()->jabatan === 'SUPERADMIN')
+          @if(auth()->user()->jabatan === 'SUPERADMIN' || auth()->user()->jabatan == 'TEAM WAGNER')
           <li class="nav-item">
             <a class="nav-link" data-toggle="tab" href="#daftar" role="tab">
               Daftar Hadir

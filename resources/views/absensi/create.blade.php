@@ -143,6 +143,8 @@
       return false;
     }
 
+    $('#takeAbsenMasuk').attr('disabled', true);
+
     $.ajax({
       type: 'POST'
       , url: "{{route('absen.store')}}"
@@ -194,6 +196,8 @@
       , })
       return false;
     }
+    $('#takeAbsenKeluar').attr('disabled', true);
+
 
     $.ajax({
       type: 'POST'

@@ -71,13 +71,15 @@
       <tr>
         <td style="width:30px;">
           {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" width="120" height="70" alt=""> --}}
-          <img src="{{asset('assets/img/web-logo.png')}}" width="120" height="70" alt="">
+          {{-- <img src="{{asset('assets/img/web-logo.png')}}" width="120" height="70" alt=""> --}}
+          <img src="{{asset('assets/img/app-logo.jpg')}}" width="120" height="70" alt="">
         </td>
         <td>
           <span id="title">LAPORAN ABSENSI KARYAWAN <br>
             PERIODE {{ strtoupper($namabulan[$bulans]) }} {{ $tahun }} <br>
             {{-- PT Satria Digital Sejahtera --}}
-            PT Ainiyah Indomitra Sejahtera
+            {{-- PT Ainiyah Indomitra Sejahtera --}}
+            PT Astama Cahaya Karya
           </span>
 
         </td>
@@ -87,8 +89,10 @@
     <table class="tablepresensi">
 
       <tr>
+        <th rowspan="3">NIK</th>
         <th rowspan="3">Email</th>
         <th rowspan="3">Nama</th>
+        <th rowspan="3">Jabatan</th>
         <th colspan="{{$totalDays * 2}}">Tanggal</th>
         <th rowspan="3">TM</th>
         <th rowspan="3">TK</th>
@@ -121,8 +125,10 @@
 
       @foreach ($result as $res => $d)
       <tr>
+        <td>{{$d['perner']}}</td>
         <td>{{$d['email']}}</td>
         <td>{{$d['nama']}}</td>
+        <td>{{$d['jabatan']}}</td>
 
         <?php 
         $totalhadir = 0;
@@ -138,43 +144,52 @@
             $tgl = "tgl_".$dayKey;
             $hadir = ['', '']; // Default empty array for Masuk and Keluar
 
-            if (!empty($d[$dayKey])) {
-                // Check if $d->$tgl contains '-' to determine if it's concatenated
-                if (strpos($d[$dayKey], '-') !== false) {
-                    $hadir = explode("-", $d[$dayKey]);
-                    // If it's concatenated, count as Masuk and Keluar
-                    if($hadir[0] != '') {
-                        $totalmasuk++;
-                        $totalhadir++;
-                    }
+            if (isset($d[$dayKey])) { // Check if the value is set
+                if (!empty($d[$dayKey])) { // Check if the value is not empty
+                    // If the value is not null or empty, process it
+                    // Check if $d->$tgl contains '-' to determine if it's concatenated
+                    if (strpos($d[$dayKey], '-') !== false) {
+                        $hadir = explode("-", $d[$dayKey]);
+                        // If it's concatenated, count as Masuk and Keluar
+                        if($hadir[0] != '') {
+                            $totalmasuk++;
+                            $totalhadir++;
+                        }
 
-                    if($hadir[1] != '') {
-                        $totalkeluar++;
-                    }
+                        if($hadir[1] != '') {
+                            $totalkeluar++;
+                        }
 
+                    } else {
+                        // If it's a single value, count based on its type
+                        switch ($d[$dayKey]) {
+                            case 'I':
+                                $hadir[0] = $d[$dayKey];
+                                $hadir[1] = $d[$dayKey];
+                                $totalizin++;
+                                $totalhadir++;
+                                break;
+                            case 'S':
+                                $hadir[0] = $d[$dayKey];
+                                $hadir[1] = $d[$dayKey];
+                                $totalsakit++;
+                                $totalhadir++;
+                                break;
+                            case 'LIBUR':
+                                $hadir[0] = $d[$dayKey];
+                                $hadir[1] = $d[$dayKey];
+                                break;
+                            default:
+                                $totalalpha++; // Increment totalalpha for unspecified cases
+                                break;
+                        }
+                    }
                 } else {
-                    // If it's a single value, count based on its type
-                    switch ($d[$dayKey]) {
-                        case 'I':
-                            $hadir[0] = $d[$dayKey];
-                            $hadir[1] = $d[$dayKey];
-                            $totalizin++;
-                            $totalhadir++;
-                            break;
-                        case 'S':
-                            $hadir[0] = $d[$dayKey];
-                            $hadir[1] = $d[$dayKey];
-                            $totalsakit++;
-                            $totalhadir++;
-                            break;
-                        case 'LIBUR':
-                            $hadir[0] = $d[$dayKey];
-                            $hadir[1] = $d[$dayKey];
-                            break;
-                        default:
-                            break;
-                    }
+                    // If the value is empty, increment totalalpha
+                    $totalalpha++;
                 }
+            } else {
+                // If the value is not set, increment totalalpha
                 $totalalpha++;
             }
             ?>

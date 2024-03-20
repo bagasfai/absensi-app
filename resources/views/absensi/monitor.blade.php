@@ -47,27 +47,28 @@
 
             <div class="row">
               <div class="col-12">
+                <div class="table-responsive">
+                  <table class="table table-striped table-hover" id="dataTable">
+                    <thead>
+                      <tr>
+                        <th>No.</th>
+                        <th>Nama</th>
+                        <th>Absen Masuk</th>
+                        <th>Posisi Absen</th>
+                        <th>Laporan Masuk</th>
+                        <th>Foto Masuk</th>
+                        <th>Absen Keluar</th>
+                        <th>Posisi Keluar</th>
+                        <th>Laporan Keluar</th>
+                        <th>Foto Keluar</th>
+                      </tr>
+                    </thead>
 
-                <table class="table table-striped table-hover" id="dataTable">
-                  <thead>
-                    <tr>
-                      <th>No.</th>
-                      <th>Nama</th>
-                      <th>Absen Masuk</th>
-                      <th>Posisi Absen</th>
-                      <th>Laporan Masuk</th>
-                      <th>Foto Masuk</th>
-                      <th>Absen Keluar</th>
-                      <th>Posisi Keluar</th>
-                      <th>Laporan Keluar</th>
-                      <th>Foto Keluar</th>
-                    </tr>
-                  </thead>
+                    <tbody id="loadabsen">
+                    </tbody>
 
-                  <tbody id="loadabsen">
-                  </tbody>
-
-                </table>
+                  </table>
+                </div>
 
               </div>
             </div>

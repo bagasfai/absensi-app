@@ -70,13 +70,14 @@
       <tr>
         <td style="width:30px;">
           {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" width="120" height="70" alt=""> --}}
-          <img src="{{asset('assets/img/web-logo.png')}}" width="120" height="70" alt="">
+          {{-- <img src="{{asset('assets/img/web-logo.png')}}" width="120" height="70" alt=""> --}}
+          <img src="{{asset('assets/img/app-logo.jpg')}}" width="120" height="70" alt="">
         </td>
         <td>
           <span id="title">LAPORAN ABSENSI KARYAWAN <br>
             PERIODE {{ strtoupper($namabulan[$bulan]) }} {{ $tahun }} <br>
             {{-- PT Satria Digital Sejahtera --}}
-            PT Ainiyah Indomitra Sejahtera
+            PT Astama Cahaya Karya
           </span>
 
         </td>

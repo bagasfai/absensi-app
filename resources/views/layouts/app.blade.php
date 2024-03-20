@@ -8,7 +8,8 @@
   <title>{{ config('app.name', 'Absensi') }}</title>
 
   {{-- <link rel="icon" href="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png"> --}}
-  <link rel="icon" href="{{asset('assets/img/web-logo.png')}}">
+  {{-- <link rel="icon" href="{{asset('assets/img/web-logo.png')}}"> --}}
+  <link rel="icon" href="{{asset('assets/img/app-logo.jpg')}}">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.bunny.net">

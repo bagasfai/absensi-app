@@ -10,7 +10,8 @@ $path = Storage::url('/uploads/background-card.png');
         <div class="shrink-0 flex items-center">
           <a href="{{ route('absen.dashboard') }}">
             {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" alt="" height="150" width="150"> --}}
-            <img src="{{asset('assets/img/web-logo.png')}}" alt="" height="150" width="150">
+            {{-- <img src="{{asset('assets/img/web-logo.png')}}" alt="" height="150" width="150"> --}}
+            <img src="{{asset('assets/img/app-logo.jpg')}}" alt="" height="50" width="50">
           </a>
         </div>
 
@@ -20,7 +21,7 @@ $path = Storage::url('/uploads/background-card.png');
             {{ __('Dashboard') }}
           </x-nav-link>
           <br>
-          @if(auth()->user()->jabatan === 'SUPERADMIN')
+          @if(auth()->user()->jabatan === 'SUPERADMIN' || auth()->user()->jabatan === 'TEAM WAGNER')
           <x-nav-link :href="route('dashboardadmin')" :active="request()->routeIs('dashboardadmin')">
             {{ __('Admin Page') }}
           </x-nav-link>

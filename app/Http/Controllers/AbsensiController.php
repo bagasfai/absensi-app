@@ -20,7 +20,11 @@ class AbsensiController extends Controller
 {
   public function index()
   {
-    $absen = Absen::all();
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $absen = Absen::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->get();
+    } else {
+      $absen = Absen::all();
+    }
     $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
     return view('absensi.index', compact('absen', 'jumlahIzin'));
   }
@@ -46,10 +50,11 @@ class AbsensiController extends Controller
   {
     $hariini = date("Y-m-d");
     $email = auth()->user()->email;
-    $cek = Absen::where('email', $email)->whereNull('jam_keluar')->orderBy('id', 'desc')->first();
+    $cek = Absen::where('email', $email)->where('status', 'H')->whereNull('jam_keluar')->orderBy('id', 'desc')->first();
     $currentDateTime = now();
     $latestEntry = Absen::select(DB::raw('CONCAT(tanggal, " ", jam_masuk) as datetime'))
       ->where('email', $email)
+      ->where('status', 'H')
       ->whereNotNull('jam_masuk')
       ->orderBy('id', 'desc')
       ->first();
@@ -81,7 +86,7 @@ class AbsensiController extends Controller
       $ket = 'keluar';
     }
 
-    $cek = Absen::where('tanggal', $tanggal)->where('email', $email)->count();
+    $cek = Absen::where('tanggal', $tanggal)->where('email', $email)->where('status', 'H')->count();
     $image = $request->image;
 
     $folderPath = "public/uploads/absensi/";
@@ -247,7 +252,7 @@ class AbsensiController extends Controller
       $selisihWaktuOut = "";
     }
 
-    $cek = Absen::where('email', $email)->orderBy('id', 'desc')->first();
+    $cek = Absen::where('email', $email)->where('status', 'H')->orderBy('id', 'desc')->first();
 
     return view('absensi.editprofile', compact('karyawan', 'selisihWaktuOut'));
   }
@@ -344,7 +349,7 @@ class AbsensiController extends Controller
       $selisihWaktuOut = "";
     }
 
-    $cek = Absen::where('email', $email)->orderBy('id', 'desc')->first();
+    $cek = Absen::where('email', $email)->where('status', 'H')->orderBy('id', 'desc')->first();
 
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     return view('absensi.histori', compact('namabulan', 'selisihWaktuOut'));
@@ -406,7 +411,7 @@ class AbsensiController extends Controller
       $selisihWaktuOut = "";
     }
 
-    $cek = Absen::where('email', $email)->orderBy('id', 'desc')->first();
+    $cek = Absen::where('email', $email)->where('status', 'H')->orderBy('id', 'desc')->first();
 
     $dataizin = Pengajuan_Izin::where('email', $email)->get();
 
@@ -454,7 +459,7 @@ class AbsensiController extends Controller
       $selisihWaktuOut = "";
     }
 
-    $cek = Absen::where('email', $email)->orderBy('id', 'desc')->first();
+    $cek = Absen::where('email', $email)->where('status', 'H')->orderBy('id', 'desc')->first();
 
     return view('absensi.izin.buatizin', compact('selisihWaktuOut'));
   }
@@ -519,9 +524,14 @@ class AbsensiController extends Controller
   public function getpresensi(Request $request)
   {
     $tanggal = $request->tanggal;
-    $absen = Absen::where('tanggal', $tanggal)->get();
     $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
-
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $absen = Absen::where('tanggal', $tanggal)
+        ->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->get();
+    } else {
+      $absen = Absen::where('tanggal', $tanggal)->get();
+    }
     return view('absensi.getpresensi', compact('absen', 'jumlahIzin'));
   }
 
@@ -543,6 +553,14 @@ class AbsensiController extends Controller
     $bulan = $request->bulan;
     $tahun = $request->tahun;
 
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $user = User::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->orderBy('nama')
+        ->get();
+    } else {
+      $user = User::orderBy('nama')->get();
+    }
+
     $absen = Absen::where('email', $email)
       ->whereRaw('MONTH(tanggal) = ?', [$bulan])
       ->whereRaw('YEAR(tanggal) = ?', [$tahun])
@@ -558,11 +576,19 @@ class AbsensiController extends Controller
     $bulan = $request->bulan;
     $tahun = $request->tahun;
 
-    // Fetch the preview data based on the selected employee's email, month, and year
-    $previewData = Absen::where('email', $email)
-      ->whereRaw('MONTH(tanggal) = ?', [$bulan])
-      ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-      ->get();
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      // Fetch the preview data based on the selected employee's email, month, and year
+      $previewData = Absen::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+        ->get();
+    } else {
+      // Fetch the preview data based on the selected employee's email, month, and year
+      $previewData = Absen::where('email', $email)
+        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+        ->get();
+    }
 
     return response()->json($previewData);
   }
@@ -595,11 +621,20 @@ class AbsensiController extends Controller
       ) as tgl_$day";
     }
 
-    $previewData = Absen::selectRaw($selectClause)
-      ->whereRaw('MONTH(tanggal) = ?', [$bulan])
-      ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-      ->groupByRaw('email, nama')
-      ->get();
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $previewData = Absen::selectRaw($selectClause)
+        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+        ->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->groupByRaw('email, nama')
+        ->get();
+    } else {
+      $previewData = Absen::selectRaw($selectClause)
+        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+        ->groupByRaw('email, nama')
+        ->get();
+    }
 
     return response()->json($previewData);
   }
@@ -645,26 +680,52 @@ class AbsensiController extends Controller
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     $totalDays =  cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
 
-    $rekap = Absen::select([
-      "email",
-      "nama",
-      "status",
-      "tanggal",
-      "jam_masuk",
-      "jam_keluar",
-      DB::raw("DAYNAME(tanggal) AS hari"),
-      DB::raw("DAY(tanggal) AS date"),
-    ])
-      ->whereRaw('MONTH(tanggal) = ?', [$bulan])
-      ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-      // ->groupByRaw('email, nama')
-      ->get();
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $rekap = Absen::select([
+        "users.perner",
+        "users.jabatan",
+        "absens.email",
+        "absens.nama",
+        "absens.status",
+        "absens.tanggal",
+        "absens.jam_masuk",
+        "absens.jam_keluar",
+        DB::raw("DAYNAME(absens.tanggal) AS hari"),
+        DB::raw("DAY(absens.tanggal) AS date"),
+      ])
+        ->leftJoin('users', 'absens.email', '=', 'users.email')
+        ->whereRaw('MONTH(absens.tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(absens.tanggal) = ?', [$tahun])
+        ->whereIn('absens.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        // ->groupByRaw('email, nama')
+        ->get();
+    } else {
+      $rekap = Absen::select([
+        "users.perner",
+        "users.jabatan",
+        "absens.email",
+        "absens.nama",
+        "absens.status",
+        "absens.tanggal",
+        "absens.jam_masuk",
+        "absens.jam_keluar",
+        DB::raw("DAYNAME(absens.tanggal) AS hari"),
+        DB::raw("DAY(absens.tanggal) AS date"),
+      ])
+        ->leftJoin('users', 'absens.email', '=', 'users.email')
+        ->whereRaw('MONTH(absens.tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(absens.tanggal) = ?', [$tahun])
+        // ->groupByRaw('email, nama')
+        ->get();
+    }
 
     $result = [];
     foreach ($rekap as $item) {
 
       if (!array_key_exists($item->email, $result)) {
         $result[$item->email] = [
+          "perner" => $item->perner,
+          "jabatan" => $item->jabatan,
           "nama" => $item->nama,
           "email" => $item->email,
         ];
@@ -701,14 +762,26 @@ class AbsensiController extends Controller
 
   public function izinsakit(Request $request)
   {
-    $query = Pengajuan_Izin::query();
-    $query->select('pengajuan_izin.id', 'tanggal_izin', 'pengajuan_izin.email', 'nama', 'jabatan', 'status', 'status_approved', 'keterangan', 'evident');
-    $query->join('users', 'pengajuan_izin.email', '=', 'users.email');
-    if (!empty($request->dari) && !empty($request->sampai)) {
-      $query->whereBetween('tanggal_izin', [$request->dari, $request->sampai]);
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $query = Pengajuan_Izin::query();
+      $query->select('pengajuan_izin.id', 'tanggal_izin', 'pengajuan_izin.email', 'nama', 'jabatan', 'status', 'status_approved', 'keterangan', 'evident');
+      $query->whereIn('pengajuan_izin.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com']);
+      $query->join('users', 'pengajuan_izin.email', '=', 'users.email');
+      if (!empty($request->dari) && !empty($request->sampai)) {
+        $query->whereBetween('tanggal_izin', [$request->dari, $request->sampai]);
+      }
+      $query->orderBy('tanggal_izin', 'desc');
+      $izinsakit = $query->get();
+    } else {
+      $query = Pengajuan_Izin::query();
+      $query->select('pengajuan_izin.id', 'tanggal_izin', 'pengajuan_izin.email', 'nama', 'jabatan', 'status', 'status_approved', 'keterangan', 'evident');
+      $query->join('users', 'pengajuan_izin.email', '=', 'users.email');
+      if (!empty($request->dari) && !empty($request->sampai)) {
+        $query->whereBetween('tanggal_izin', [$request->dari, $request->sampai]);
+      }
+      $query->orderBy('tanggal_izin', 'desc');
+      $izinsakit = $query->get();
     }
-    $query->orderBy('tanggal_izin', 'desc');
-    $izinsakit = $query->get();
 
     $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
 

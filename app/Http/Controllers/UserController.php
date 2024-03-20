@@ -19,7 +19,12 @@ class UserController extends Controller
 	public function index()
 	{
 		$jabatan = Jabatan::all();
-		$user = User::orderBy('nama')->get();
+
+		if (auth()->user()->jabatan == 'TEAM WAGNER') {
+			$user = User::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->get();
+		} else {
+			$user = User::orderBy('nama')->get();
+		}
 		$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
 
 		$email = auth()->user()->email;

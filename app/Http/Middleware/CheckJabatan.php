@@ -9,14 +9,22 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckJabatan
 {
-    public function handle(Request $request, Closure $next, $requiredJabatan)
+    public function handle(Request $request, Closure $next, ...$requiredJabatans)
     {
         $user = Auth::user();
 
-        if ($user && $user->jabatan === $requiredJabatan) {
-            return $next($request);
+        // Check if the user is authenticated
+        if (!$user) {
+            abort(403, 'Unauthorized');
         }
 
-        abort(403, 'Unauthorized'); // You can customize the response as needed
+        // Check if the user's 'jabatan' matches any of the required 'jabatan'
+        foreach ($requiredJabatans as $requiredJabatan) {
+            if ($user->jabatan === $requiredJabatan) {
+                return $next($request);
+            }
+        }
+
+        abort(403, 'Unauthorized'); // User does not have any of the required 'jabatan'
     }
 }

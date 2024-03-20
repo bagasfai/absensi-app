@@ -22,7 +22,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   {{-- <link rel="icon" href="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png"> --}}
-  <link rel="icon" href="{{asset('assets/img/web-logo.png')}}">
+  {{-- <link rel="icon" href="{{asset('assets/img/web-logo.png')}}"> --}}
+  <link rel="icon" href="{{asset('assets/img/app-logo.jpg')}}">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.bunny.net">
@@ -56,7 +57,8 @@
             </div>
             <a href="#">
               {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" alt="" height="200" width="200"> --}}
-              <img src="{{asset('assets/img/web-logo.png')}}" alt="" height="200" width="200">
+              {{-- <img src="{{asset('assets/img/web-logo.png')}}" alt="" height="200" width="200"> --}}
+              <img src="{{asset('assets/img/app-logo.jpg')}}" alt="" height="200" width="200">
             </a>
             <div class="card card-md">
               <div class="card-body">

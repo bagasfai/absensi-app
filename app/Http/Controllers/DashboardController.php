@@ -49,10 +49,18 @@ class DashboardController extends Controller
 
 		$cek = Absen::where('email', $email)->orderBy('id', 'desc')->first();
 
-		$absenBulan = Absen::where('email', $email)
-			->whereRaw('MONTH(tanggal) = ?', [$bulan])
-			->whereRaw('YEAR(tanggal) = ?', [$tahun])
-			->orderBy('tanggal')->get();
+		if (auth()->user()->jabatan == 'TEAM WAGNER') {
+			$absenBulan = Absen::where('email', $email)
+				->whereRaw('MONTH(tanggal) = ?', [$bulan])
+				->whereRaw('YEAR(tanggal) = ?', [$tahun])
+				->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+				->orderBy('tanggal')->get();
+		} else {
+			$absenBulan = Absen::where('email', $email)
+				->whereRaw('MONTH(tanggal) = ?', [$bulan])
+				->whereRaw('YEAR(tanggal) = ?', [$tahun])
+				->orderBy('tanggal')->get();
+		}
 
 		$user = User::where('email', $email)->first();
 
@@ -64,10 +72,18 @@ class DashboardController extends Controller
 			->whereNotNull('jam_keluar')
 			->first();
 
-		$daftarHadir = Absen::join('users', 'absens.email', '=', 'users.email')
-			->where('tanggal', $hariini)
-			->orderBy('jam_masuk')
-			->get();
+		if (auth()->user()->jabatan == 'TEAM WAGNER') {
+			$daftarHadir = Absen::join('users', 'absens.email', '=', 'users.email')
+				->where('tanggal', $hariini)
+				->whereIn('absens.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+				->orderBy('jam_masuk')
+				->get();
+		} else {
+			$daftarHadir = Absen::join('users', 'absens.email', '=', 'users.email')
+				->where('tanggal', $hariini)
+				->orderBy('jam_masuk')
+				->get();
+		}
 
 		$namaBulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
@@ -87,10 +103,15 @@ class DashboardController extends Controller
 		$tahun = date('Y');
 		$bulan = date('m') * 1;
 		$hariini =  date("Y-m-d");
-		$user = User::count();
+		if (auth()->user()->jabatan == 'TEAM WAGNER') {
+			$user = User::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+		} else {
+			$user = User::count();
+		}
 		$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
 		$rekapAbsen = Absen::selectRaw('COUNT(email) AS jumlah_hadir')
 			->where('tanggal', $hariini)
+			->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
 			->whereNotNull('jam_masuk')
 			->whereNotNull('jam_keluar')
 			->first();
@@ -98,6 +119,7 @@ class DashboardController extends Controller
 		$rekapIzin = Pengajuan_Izin::selectRaw('SUM(IF(status="SAKIT",1,0)) AS jumlah_sakit, SUM(IF(status="IZIN",1,0)) AS jumlah_izin')
 			->where('tanggal_izin', $hariini)
 			->where('status_approved', 1)
+			->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
 			->whereRaw('MONTH(tanggal_izin) = ?', [$bulan])
 			->whereRaw('YEAR(tanggal_izin) = ?', [$tahun])
 			->first();
