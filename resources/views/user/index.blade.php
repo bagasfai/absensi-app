@@ -72,7 +72,8 @@
                   @if(empty($u->foto))
                   {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" class="avatar" alt="Foto User"> --}}
                   {{-- <img src="{{asset('assets/img/web-logo.png')}}" class="avatar" alt="Foto User"> --}}
-                  <img src="{{asset('assets/img/app-logo.jpg')}}" class="avatar" alt="Foto User">
+                  {{-- <img src="{{asset('assets/img/app-logo.jpg')}}" class="avatar" alt="Foto User"> --}}
+                  <img src="{{asset('assets/img/blm.jpg')}}" class="avatar" alt="Foto User">
                   @else
                   <img src="{{url($path)}}" class="avatar" alt="Foto User">
                   @endif

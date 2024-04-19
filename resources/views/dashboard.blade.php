@@ -29,7 +29,8 @@
         // Default image path
         // $path = 'https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png';
         // $path = asset('assets/img/web-logo.png');
-        $path = asset('assets/img/app-logo.jpg');
+        // $path = asset('assets/img/app-logo.jpg');
+        $path = asset('assets/img/blm.jpg');
         @endphp
         @endif
         <img src="{{ $path }}" alt="avatar" class="imaged w-24 h-16 bg-white" />

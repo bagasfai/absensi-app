@@ -8,7 +8,8 @@
   <title>Dashboard Admin</title>
   {{-- <link rel="icon" href="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png"> --}}
   {{-- <link rel="icon" href="{{asset('assets/img/web-logo.png')}}"> --}}
-  <link rel="icon" href="{{asset('assets/img/app-logo.jpg')}}">
+  {{-- <link rel="icon" href="{{asset('assets/img/app-logo.jpg')}}"> --}}
+  <link rel="icon" href="{{asset('assets/img/blm.jpg')}}">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
 
   <!-- CSS files -->

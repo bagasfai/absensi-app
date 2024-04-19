@@ -132,6 +132,7 @@ class AbsensiController extends Controller
         'foto_masuk' => $fileName,
         'lokasi_masuk' => $lokasi,
         'laporan_masuk' => $laporan,
+        'user_id' => auth()->user()->id,
       ];
 
       $simpan = Absen::insert($data);
