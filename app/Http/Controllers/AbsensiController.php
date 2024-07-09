@@ -41,33 +41,23 @@ class AbsensiController extends Controller
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $absen = $query->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
         ->get();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $absen = $query->leftJoin('users', 'absens.user_id', '=', 'users.id')
+        ->where('users.jabatan', 'KORLAP')
+        ->get();
     } else {
       $absen = Absen::all();
     }
+
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $jumlahIzin = Pengajuan_Izin::leftJoin('users', 'pengajuan_izin.email', '=', 'users.email')->select('*')->where('status_approved', 0)->where('users.jabatan', 'KORLAP')->count();
     } else {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
     }
 
     return view('absensi.index', compact('absen', 'jumlahIzin'));
-  }
-
-  public function masuk()
-  {
-    $email = auth()->user()->email; // Assuming 'email' is the column in the users table
-    $absen = User::where('email', $email)->get();
-
-    return view('absensi.create', ['absen' => $absen]);
-  }
-
-  public function keluar(Absen $id, Request $request)
-  {
-
-    $email = auth()->user()->email; // Assuming 'email' is the column in the users table
-    $absen = User::where('email', $email)->get();
-
-    return view('absensi.keluar', ['absen' => $absen]);
   }
 
   public function create()
@@ -168,41 +158,6 @@ class AbsensiController extends Controller
         echo "error|Maaf, absen tidak berhasil.|out";
       }
     }
-  }
-
-  public function absenMasuk(Request $request)
-  {
-    $data = $request->validate([
-      'email' => 'required|string',
-      'nama' => 'required|string',
-      'status' => 'required|in:HADIR,TIDAK HADIR,IZIN,SAKIT',
-      'keterangan' => 'nullable',
-      'posisi_absen' => 'nullable',
-    ]);
-
-    $data['absen_masuk'] = Carbon::now();
-    $data['posisi_absen'] = $request->input('posisi_absen');
-
-    $absen = Absen::create($data);
-
-    return redirect(route('absen.index'));
-  }
-
-  public function absenKeluar(Request $request)
-  {
-    $data = $request->validate([
-      'email' => 'required|string',
-      'nama' => 'required|string',
-      'laporan' => 'required',
-      'posisi_absen' => 'nullable',
-    ]);
-
-    $data['absen_keluar'] = Carbon::now();
-    $data['posisi_absen'] = $request->input('posisi_absen');
-
-    $absen = Absen::create($data);
-
-    return redirect(route('absen.index'));
   }
 
   public function edit(Absen $absen)
@@ -544,6 +499,8 @@ class AbsensiController extends Controller
   {
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $jumlahIzin = Pengajuan_Izin::leftJoin('users', 'pengajuan_izin.email', '=', 'users.email')->select('*')->where('status_approved', 0)->where('users.jabatan', 'KORLAP')->count();
     } else {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
     }
@@ -554,32 +511,80 @@ class AbsensiController extends Controller
   public function getpresensi(Request $request)
   {
     $tanggal = $request->tanggal;
+
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $jumlahIzin = Pengajuan_Izin::leftJoin('users', 'pengajuan_izin.email', '=', 'users.email')->select('*')->where('status_approved', 0)->where('users.jabatan', 'KORLAP')->count();
     } else {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
     }
+
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $absen = Absen::where('tanggal', $tanggal)
         ->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
         ->get();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $absen = Absen::leftJoin('users', 'absens.user_id', '=', 'users.id')
+        ->where('tanggal', $tanggal)
+        ->where('users.jabatan', 'KORLAP')
+        ->get();
     } else {
       $absen = Absen::where('tanggal', $tanggal)->get();
     }
+
     return view('absensi.getpresensi', compact('absen', 'jumlahIzin'));
+  }
+
+  public function records(Request $request)
+  {
+    // Get the value of 'tanggal' from the request
+    $tanggal = $request->tanggal;
+
+    // Check if the request is an AJAX request
+    if ($request->ajax()) {
+
+      // Check if 'tanggal' is set in the request
+      if (request('tanggal')) {
+        // Fetch records where 'tanggal' matches the given date
+        $absens = Absen::where('tanggal', '=', $tanggal)->get();
+      } else {
+        // Fetch records with a conditional 'where' clause based on 'tanggal'
+        $absens = Absen::when(request('std'), function ($query) use ($tanggal) {
+          $query->where('tanggal', '=', $tanggal);
+        })->get();
+      }
+
+      // Return the fetched records as a JSON response
+      return response()->json([
+        'absens' => $absens
+      ]);
+    } else {
+      // If the request is not AJAX, abort with status code 403 (Forbidden)
+      abort(403);
+    }
   }
 
   public function getRekapPresensi(Request $request)
   {
     $tanggal = $request->tanggal;
+
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $jumlahIzin = Pengajuan_Izin::leftJoin('users', 'pengajuan_izin.email', '=', 'users.email')->select('*')->where('status_approved', 0)->where('users.jabatan', 'KORLAP')->count();
     } else {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
     }
+
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $absen = Absen::whereRaw('DATE_FORMAT(tanggal, "%Y-%m") = ?', [$tanggal])
         ->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->get();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $absen = Absen::leftJoin('users', 'absens.user_id', '=', 'users.id')
+        ->whereRaw('DATE_FORMAT(tanggal, "%Y-%m") = ?', [$tanggal])
+        ->where('users.jabatan', 'KORLAP')
         ->get();
     } else {
       $absen = Absen::where('tanggal', $tanggal)->get();
@@ -596,12 +601,168 @@ class AbsensiController extends Controller
     return view('absen.showmap', compact('absen'));
   }
 
+  public function previewDataLaporan(Request $request)
+  {
+    $email = $request->email;
+    $bulan = $request->bulan;
+    $tahun = $request->tahun;
+
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      // Fetch the preview data based on the selected employee's email, month, and year
+      $previewData = Absen::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->select(
+          'absens.*',
+          DB::raw('
+            FLOOR(TIMESTAMPDIFF(SECOND, jam_masuk, jam_keluar) / 3600) as total_hours,
+            FLOOR((TIMESTAMPDIFF(SECOND, jam_masuk, jam_keluar) % 3600) / 60) as total_minutes
+        ')
+        )
+        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+        ->get();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $previewData = Absen::leftJoin('users', 'absens.user_id', '=', 'users.id')
+        ->select(
+          'absens.*',
+          DB::raw('
+            FLOOR(TIMESTAMPDIFF(SECOND, jam_masuk, jam_keluar) / 3600) as total_hours,
+            FLOOR((TIMESTAMPDIFF(SECOND, jam_masuk, jam_keluar) % 3600) / 60) as total_minutes
+        ')
+        )
+        ->where('users.jabatan', 'KORLAP')
+        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+        ->get();
+    } else {
+      // Fetch the preview data based on the selected employee's email, month, and year
+      $previewData = Absen::where('email', $email)
+        ->select(
+          'absens.*',
+          DB::raw('
+            FLOOR(TIMESTAMPDIFF(SECOND, jam_masuk, jam_keluar) / 3600) as total_hours,
+            FLOOR((TIMESTAMPDIFF(SECOND, jam_masuk, jam_keluar) % 3600) / 60) as total_minutes
+        ')
+        )
+        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+        ->get();
+    }
+
+    foreach ($previewData as $data) {
+      if ($data->total_hours !== null && $data->total_hours > 0) {
+        $data->total_time = $data->total_hours . ' jam ' . $data->total_minutes . ' menit';
+      } else {
+        $data->total_time = '-';
+      }
+    }
+
+    return response()->json($previewData);
+  }
+
+  public function previewDataRekap(Request $request)
+  {
+    $bulan = $request->bulan;
+    $tahun = $request->tahun;
+
+    $totalDays = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
+
+    $selectClause = 'email, nama';
+
+    $totalHoursClause = "0";
+    $totalMinutesClause = "0";
+
+    for ($day = 1; $day <= $totalDays; $day++) {
+      $dayClause = "
+            CASE 
+                WHEN DAY(tanggal) = $day THEN 
+                    CASE 
+                        WHEN status = 'H' THEN CONCAT_WS('-', COALESCE(jam_masuk, ''), COALESCE(jam_keluar, '')) 
+                        WHEN status = 'I' THEN 'I' 
+                        WHEN status = 'S' THEN 'S'
+                        ELSE ''
+                    END 
+                ELSE 
+                    CASE 
+                        WHEN DAYNAME(CONCAT(YEAR(tanggal), '-', MONTH(tanggal), '-', $day)) = 'Sunday' THEN 'LIBUR'
+                        ELSE '' 
+                    END
+            END
+        ";
+
+      $hoursClause = "
+            CASE 
+                WHEN DAY(tanggal) = $day AND status = 'H' THEN FLOOR(TIMESTAMPDIFF(SECOND, jam_masuk, jam_keluar) / 3600)
+                ELSE 0
+            END
+        ";
+
+      $minutesClause = "
+            CASE 
+                WHEN DAY(tanggal) = $day AND status = 'H' THEN FLOOR((TIMESTAMPDIFF(SECOND, jam_masuk, jam_keluar) % 3600) / 60)
+                ELSE 0
+            END
+        ";
+
+      $selectClause .= ", MAX($dayClause) as tgl_$day";
+      $selectClause .= ", MAX($hoursClause) as total_hours_$day";
+      $selectClause .= ", MAX($minutesClause) as total_minutes_$day";
+
+      $totalHoursClause .= " + COALESCE(MAX($hoursClause), 0)";
+      $totalMinutesClause .= " + COALESCE(MAX($minutesClause), 0)";
+    }
+
+    // This part will calculate the total_hours_month and total_minutes_month separately
+    $selectClause .= ", ($totalHoursClause) as total_hours_month_raw";
+    $selectClause .= ", ($totalMinutesClause) as total_minutes_month_raw";
+
+    if (auth()->user()->jabatan == 'TEAM WAGNER') {
+      $previewData = Absen::selectRaw($selectClause)
+        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+        ->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->groupByRaw('email, nama')
+        ->get();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $previewData = Absen::leftJoin('users', 'absens.jabatan', '=', 'users.id')
+        ->where('users.jabatan', 'KORLAP')
+        ->selectRaw($selectClause)
+        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+        ->groupByRaw('email, nama')
+        ->get();
+    } else {
+      $previewData = Absen::selectRaw($selectClause)
+        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
+        ->groupByRaw('email, nama')
+        ->get();
+    }
+
+    // Post-process to correct the total hours and minutes for the month
+    foreach ($previewData as $data) {
+      $total_hours = $data->total_hours_month_raw;
+      $total_minutes = $data->total_minutes_month_raw;
+
+      // Convert excess minutes to hours
+      $additional_hours = floor($total_minutes / 60);
+      $remaining_minutes = $total_minutes % 60;
+
+      // Add the additional hours to total hours
+      $data->total_hours_month = $total_hours + $additional_hours;
+      $data->total_minutes_month = $remaining_minutes;
+    }
+
+    return response()->json($previewData);
+  }
+
   public function laporan(Request $request)
   {
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     $user = User::orderBy('nama')->get();
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $jumlahIzin = Pengajuan_Izin::leftJoin('users', 'pengajuan_izin.email', '=', 'users.email')->select('*')->where('status_approved', 0)->where('users.jabatan', 'KORLAP')->count();
     } else {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
     }
@@ -612,6 +773,10 @@ class AbsensiController extends Controller
 
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $user = User::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->orderBy('nama')
+        ->get();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $user = User::where('jabatan', 'KORLAP')
         ->orderBy('nama')
         ->get();
     } else {
@@ -627,75 +792,6 @@ class AbsensiController extends Controller
     return view('absensi.laporan.laporan', compact('namabulan', 'user', 'jumlahIzin', 'absen'));
   }
 
-  public function previewDataLaporan(Request $request)
-  {
-    $email = $request->email;
-    $bulan = $request->bulan;
-    $tahun = $request->tahun;
-
-    if (auth()->user()->jabatan == 'TEAM WAGNER') {
-      // Fetch the preview data based on the selected employee's email, month, and year
-      $previewData = Absen::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
-        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
-        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-        ->get();
-    } else {
-      // Fetch the preview data based on the selected employee's email, month, and year
-      $previewData = Absen::where('email', $email)
-        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
-        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-        ->get();
-    }
-
-    return response()->json($previewData);
-  }
-
-  public function previewDataRekap(Request $request)
-  {
-    $bulan = $request->bulan;
-    $tahun = $request->tahun;
-
-    $totalDays = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
-
-    $selectClause = 'email, nama';
-
-    for ($day = 1; $day <= $totalDays; $day++) {
-      $selectClause .= ", MAX(
-        CASE 
-          WHEN DAY(tanggal) = $day THEN 
-            CASE 
-              WHEN status = 'H' THEN CONCAT_WS('-', COALESCE(jam_masuk, ''), COALESCE(jam_keluar, '')) 
-              WHEN status = 'I' THEN 'I' 
-              WHEN status = 'S' THEN 'S'
-              ELSE ''
-            END 
-          ELSE 
-            CASE 
-              WHEN DAYNAME(CONCAT(YEAR(tanggal), '-', MONTH(tanggal), '-', $day)) = 'Sunday' THEN 'LIBUR'
-              ELSE '' 
-            END
-        END
-      ) as tgl_$day";
-    }
-
-    if (auth()->user()->jabatan == 'TEAM WAGNER') {
-      $previewData = Absen::selectRaw($selectClause)
-        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
-        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-        ->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
-        ->groupByRaw('email, nama')
-        ->get();
-    } else {
-      $previewData = Absen::selectRaw($selectClause)
-        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
-        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-        ->groupByRaw('email, nama')
-        ->get();
-    }
-
-    return response()->json($previewData);
-  }
-
   public function cetaklaporan(Request $request)
   {
     $email = $request->email;
@@ -704,10 +800,25 @@ class AbsensiController extends Controller
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     $user = User::where('email', $email)->first();
     $absen = Absen::where('email', $email)
+      ->select(
+        'absens.*',
+        DB::raw('
+        FLOOR(TIMESTAMPDIFF(SECOND, jam_masuk, jam_keluar) / 3600) as total_hours,
+        FLOOR((TIMESTAMPDIFF(SECOND, jam_masuk, jam_keluar) % 3600) / 60) as total_minutes
+    ')
+      )
       ->whereRaw('MONTH(tanggal) = ?', [$bulan])
       ->whereRaw('YEAR(tanggal) = ?', [$tahun])
       ->orderBy('tanggal')
       ->get();
+
+    foreach ($absen as $data) {
+      if ($data->total_hours !== null && $data->total_hours > 0) {
+        $data->total_time = $data->total_hours . ' jam ' . $data->total_minutes . ' menit';
+      } else {
+        $data->total_time = '-';
+      }
+    }
 
     if (isset($_POST['exportExcel'])) {
       $time = date("d-m-Y H:i:s");
@@ -715,7 +826,6 @@ class AbsensiController extends Controller
       header("Content-type: application/vnd-ms-excel");
       // mendefinisikan nama file export "hasil-export.xls"
       header("Content-Disposition: attachment; filename=Laporan Absensi $time.xls");
-      return view('absensi.laporan.cetaklaporanexcel', compact('bulan', 'tahun', 'namabulan', 'user', 'absen'));
     }
 
     return view('absensi.laporan.cetaklaporan', compact('bulan', 'tahun', 'namabulan', 'user', 'absen'));
@@ -726,6 +836,8 @@ class AbsensiController extends Controller
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $jumlahIzin = Pengajuan_Izin::leftJoin('users', 'pengajuan_izin.email', '=', 'users.email')->select('*')->where('status_approved', 0)->where('users.jabatan', 'KORLAP')->count();
     } else {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
     }
@@ -753,10 +865,38 @@ class AbsensiController extends Controller
         "absens.jam_keluar",
         DB::raw("DAYNAME(absens.tanggal) AS hari"),
         DB::raw("DAY(absens.tanggal) AS date"),
+        DB::raw('
+            FLOOR(TIMESTAMPDIFF(SECOND, absens.jam_masuk, absens.jam_keluar) / 3600) as total_hours,
+            FLOOR((TIMESTAMPDIFF(SECOND, absens.jam_masuk, absens.jam_keluar) % 3600) / 60) as total_minutes
+        ')
       ])
         ->leftJoin('users', 'absens.email', '=', 'users.email')
         ->whereRaw('MONTH(absens.tanggal) = ?', [$bulan])
         ->whereRaw('YEAR(absens.tanggal) = ?', [$tahun])
+        ->whereIn('absens.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        // ->groupByRaw('email, nama')
+        ->get();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $rekap = Absen::select([
+        "users.perner",
+        "users.jabatan",
+        "absens.email",
+        "absens.nama",
+        "absens.status",
+        "absens.tanggal",
+        "absens.jam_masuk",
+        "absens.jam_keluar",
+        DB::raw("DAYNAME(absens.tanggal) AS hari"),
+        DB::raw("DAY(absens.tanggal) AS date"),
+        DB::raw('
+            FLOOR(TIMESTAMPDIFF(SECOND, absens.jam_masuk, absens.jam_keluar) / 3600) as total_hours,
+            FLOOR((TIMESTAMPDIFF(SECOND, absens.jam_masuk, absens.jam_keluar) % 3600) / 60) as total_minutes
+        ')
+      ])
+        ->leftJoin('users', 'absens.email', '=', 'users.email')
+        ->whereRaw('MONTH(absens.tanggal) = ?', [$bulan])
+        ->whereRaw('YEAR(absens.tanggal) = ?', [$tahun])
+        ->where('users.jabatan', 'KORLAP')
         ->whereIn('absens.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
         // ->groupByRaw('email, nama')
         ->get();
@@ -772,6 +912,10 @@ class AbsensiController extends Controller
         "absens.jam_keluar",
         DB::raw("DAYNAME(absens.tanggal) AS hari"),
         DB::raw("DAY(absens.tanggal) AS date"),
+        DB::raw('
+            FLOOR(TIMESTAMPDIFF(SECOND, absens.jam_masuk, absens.jam_keluar) / 3600) as total_hours,
+            FLOOR((TIMESTAMPDIFF(SECOND, absens.jam_masuk, absens.jam_keluar) % 3600) / 60) as total_minutes
+        ')
       ])
         ->leftJoin('users', 'absens.email', '=', 'users.email')
         ->whereRaw('MONTH(absens.tanggal) = ?', [$bulan])
@@ -779,6 +923,9 @@ class AbsensiController extends Controller
         // ->groupByRaw('email, nama')
         ->get();
     }
+
+    $total_hours_month_raw = 0;
+    $total_minutes_month_raw = 0;
 
     $result = [];
     foreach ($rekap as $item) {
@@ -789,25 +936,51 @@ class AbsensiController extends Controller
           "jabatan" => $item->jabatan,
           "nama" => $item->nama,
           "email" => $item->email,
+          "total_hours_month" => 0,
+          "total_minutes_month" => 0,
         ];
 
         for ($day = 1; $day <= $totalDays; $day++) {
           $today = Carbon::createFromFormat("Ymj", "{$tahun}{$bulan}{$day}");
 
           if ($today->englishDayOfWeek === "Sunday") {
-            $result[$item->email][$day] = "LIBUR";
+            $result[$item->email]['tgl_' . $day] = "LIBUR";
+            $result[$item->email]['total_hours_' . $day] = 0;
+            $result[$item->email]['total_minutes_' . $day] = 0;
+            // $total_hours_month_raw += $result[$item->email]['total_hours_' . $day];
           } else {
-            $result[$item->email][$day] = null;
+            $result[$item->email]['tgl_' . $day] = null;
+            $result[$item->email]['total_hours_' . $day] = null;
+            $result[$item->email]['total_minutes_' . $day] = null;
           }
         }
       }
 
-      $result[$item->email][$item->date] = match ($item->status) {
+      $total_hours_month_raw += $item['total_hours'];
+
+      $result[$item->email]['tgl_' . $item->date] = match ($item->status) {
         "H", "0" => "{$item->jam_masuk}-{$item->jam_keluar}",
         'I' => 'I',
         'S' => 'S',
         null => "A"
       };
+
+      if ($item->status == 'H' && $item->total_hours !== null && $item->total_minutes !== null) {
+        $result[$item->email]['total_hours_' . $item->date] = $item->total_hours;
+        $result[$item->email]['total_minutes_' . $item->date] = $item->total_minutes;
+
+        $result[$item->email]['total_hours_month'] += $item->total_hours;
+        $result[$item->email]['total_minutes_month'] += $item->total_minutes;
+      }
+    }
+
+    foreach ($result as $email => $data) {
+      $total_minutes = $data['total_minutes_month'];
+      $additional_hours = floor($total_minutes / 60);
+      $remaining_minutes = $total_minutes % 60;
+
+      $result[$email]['total_hours_month'] += $additional_hours;
+      $result[$email]['total_minutes_month'] = $remaining_minutes;
     }
 
     if (isset($_POST['exportExcel'])) {
@@ -833,6 +1006,17 @@ class AbsensiController extends Controller
       }
       $query->orderBy('tanggal_izin', 'desc');
       $izinsakit = $query->get();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $query = Pengajuan_Izin::query();
+      $query->select('pengajuan_izin.id', 'tanggal_izin', 'pengajuan_izin.email', 'nama', 'jabatan', 'status', 'status_approved', 'keterangan', 'evident');
+      $query->whereIn('pengajuan_izin.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com']);
+      $query->where('users.jabatan', 'KORLAP');
+      $query->join('users', 'pengajuan_izin.email', '=', 'users.email');
+      if (!empty($request->dari) && !empty($request->sampai)) {
+        $query->whereBetween('tanggal_izin', [$request->dari, $request->sampai]);
+      }
+      $query->orderBy('tanggal_izin', 'desc');
+      $izinsakit = $query->get();
     } else {
       $query = Pengajuan_Izin::query();
       $query->select('pengajuan_izin.id', 'tanggal_izin', 'pengajuan_izin.email', 'nama', 'jabatan', 'status', 'status_approved', 'keterangan', 'evident');
@@ -846,6 +1030,8 @@ class AbsensiController extends Controller
 
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+    } else if (auth()->user()->jabatan == 'ADMIN') {
+      $jumlahIzin = Pengajuan_Izin::leftJoin('users', 'pengajuan_izin.email', '=', 'users.email')->select('*')->where('status_approved', 0)->where('users.jabatan', 'KORLAP')->count();
     } else {
       $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
     }
@@ -863,6 +1049,7 @@ class AbsensiController extends Controller
     $evident = $request->evident_izin_form;
     $nama = $request->nama_izin_form;
     $email = $request->email_izin_form;
+    $user_id = User::where('email', $email)->first()->id;
 
     if ($status_approved == 1) {
       if ($status_izin_form == "SAKIT") {
@@ -884,6 +1071,8 @@ class AbsensiController extends Controller
         'lokasi_keluar' => "",
         'laporan_masuk' => $status_izin_form,
         'laporan_keluar' => $status_izin_form,
+        'status_validasi' => 1,
+        'user_id' => $user_id,
       ];
 
       $simpan = Absen::insert($data);

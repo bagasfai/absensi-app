@@ -55,6 +55,13 @@ class DashboardController extends Controller
 				->whereRaw('YEAR(tanggal) = ?', [$tahun])
 				->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
 				->orderBy('tanggal')->get();
+		} else if (auth()->user()->jabatan == 'ADMIN') {
+			$absenBulan = Absen::where('absens.email', $email)
+				->whereRaw('MONTH(tanggal) = ?', [$bulan])
+				->whereRaw('YEAR(tanggal) = ?', [$tahun])
+				->leftJoin('users', 'absens.user_id', '=', 'users.id')
+				->where('users.jabatan', 'KORLAP')
+				->orderBy('tanggal')->get();
 		} else {
 			$absenBulan = Absen::where('email', $email)
 				->whereRaw('MONTH(tanggal) = ?', [$bulan])
@@ -76,6 +83,12 @@ class DashboardController extends Controller
 			$daftarHadir = Absen::join('users', 'absens.email', '=', 'users.email')
 				->where('tanggal', $hariini)
 				->whereIn('absens.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+				->orderBy('jam_masuk')
+				->get();
+		} else if (auth()->user()->jabatan == 'ADMIN') {
+			$daftarHadir = Absen::join('users', 'absens.email', '=', 'users.email')
+				->where('tanggal', $hariini)
+				->where('users.jabatan', 'KORLAP')
 				->orderBy('jam_masuk')
 				->get();
 		} else {
@@ -103,16 +116,23 @@ class DashboardController extends Controller
 		$tahun = date('Y');
 		$bulan = date('m') * 1;
 		$hariini =  date("Y-m-d");
+
 		if (auth()->user()->jabatan == 'TEAM WAGNER') {
 			$user = User::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+		} else if (auth()->user()->jabatan == 'ADMIN') {
+			$user = User::where('jabatan', 'KORLAP')->count();
 		} else {
 			$user = User::count();
 		}
+
 		if (auth()->user()->jabatan == 'TEAM WAGNER') {
 			$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
+		} else if (auth()->user()->jabatan == 'ADMIN') {
+			$jumlahIzin = Pengajuan_Izin::leftJoin('users', 'pengajuan_izin.email', '=', 'users.email')->select('*')->where('status_approved', 0)->where('users.jabatan', 'KORLAP')->count();
 		} else {
 			$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
 		}
+
 		$rekapAbsen = Absen::selectRaw('COUNT(email) AS jumlah_hadir')
 			->where('tanggal', $hariini)
 			->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])

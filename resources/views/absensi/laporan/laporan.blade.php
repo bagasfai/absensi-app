@@ -115,6 +115,7 @@
                               <th>Jam Keluar</th>
                               <th>Laporan Keluar</th>
                               <th>Foto Keluar</th>
+                              <th>Total Jam Kerja</th>
                               <!-- Add more table headers if needed -->
                             </tr>
                           </thead>
@@ -190,6 +191,7 @@
               , row.jam_keluar
               , row.laporan_keluar
               , `<img src="uploads/absensi/${row.foto_keluar}" alt="Foto Keluar">`
+              , row.total_time
             ]);
           });
 

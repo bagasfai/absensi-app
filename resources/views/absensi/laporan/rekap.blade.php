@@ -96,8 +96,8 @@
                           <table class="table table-bordered" id="dataTable">
                             <thead>
                               <tr>
-                                <th rowspan="3" class="text-center">Email</th>
-                                <th rowspan="3" class="text-center">Nama</th>
+                                <th rowspan="3" class="text-center align-middle">Email</th>
+                                <th rowspan="3" class="text-center align-middle">Nama</th>
                                 <th class="text-center tanggal">Tanggal</th>
                                 <th rowspan="3">TM</th>
                                 <th rowspan="3">TK</th>
@@ -105,6 +105,7 @@
                                 <th rowspan="3">TS</th>
                                 <th rowspan="3">TA</th>
                                 <th rowspan="3">TH</th>
+                                <th rowspan="3">TJK</th>
                               </tr>
                               <tr id="dateHeaders">
                                 <!-- Date headers will be dynamically inserted here -->
@@ -143,7 +144,7 @@
       let bulan = $('#bulan').val();
       let tahun = $('#tahun').val();
       let totalDays = getTotalDaysInMonth(tahun, bulan);
-      let total = totalDays * 2;
+      let total = totalDays * 3;
 
       $('#dataTable .tanggal').attr('colspan', total);
 
@@ -182,11 +183,12 @@
           // Append date headers
           for (let i = 1; i <= totalDays; i++) {
             dateHeadersRow.append(
-              `<th colspan="2" class="text-center">${i}</th>`
+              `<th colspan="3" class="text-center">${i}</th>`
             );
             dateHeadersRow2.append(
               `<th>Masuk</th>
-              <th>Keluar</th>`
+              <th>Keluar</th>
+              <th>Jam Kerja</th>`
             );
           }
 
@@ -202,11 +204,22 @@
             let totalizin = 0;
             let totalsakit = 0;
             let totalalpha = 0;
+            let total_time_month = employee.total_hours_month + " Jam " + employee.total_minutes_month + " Menit";
 
             for (let i = 1; i <= totalDays; i++) {
               let tgl = "tgl_" + i;
+              let thour = "total_hours_" + i;
+              let tmin = "total_minutes_" + i;
               let hadir = ['', ''];
               let tanggal = employee[tgl];
+              let total_time;
+
+              if (employee[thour] !== null && employee[thour] > 0) {
+                total_time = employee[thour] + " Jam " + employee[tmin] + " Menit";
+              } else {
+                total_time = '-';
+              }
+
               let cekConcat;
 
               if (tanggal !== undefined && tanggal !== null) {
@@ -246,6 +259,7 @@
                     case 'LIBUR':
                       hadir[0] = tanggal;
                       hadir[1] = tanggal;
+                      total_time = 'LIBUR'
                       break;
                     default:
                       totalalpha++;
@@ -256,6 +270,7 @@
 
               html += `<td>${hadir[0]}</td>`;
               html += `<td>${hadir[1]}</td>`;
+              html += `<td>${total_time}</td>`;
             }
             html +=
               `
@@ -265,6 +280,7 @@
             <td>${totalsakit}</td>
             <td>${totalalpha}</td>
             <td>${totalhadir}</td>
+            <td>${total_time_month}</td>
             
             </tr>`;
             previewTableBody.append(html);

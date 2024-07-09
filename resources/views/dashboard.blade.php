@@ -204,6 +204,9 @@
         <div class="tab-pane fade" id="daftar" role="tabpanel">
           <ul class="listview image-listview">
             @foreach ($daftarHadir as $daftar )
+            @php
+            $path = Storage::url('uploads/absensi/' . $daftar->foto_masuk);
+            @endphp
             <li>
               <div class="item">
                 <div class="icon-box bg-primary">

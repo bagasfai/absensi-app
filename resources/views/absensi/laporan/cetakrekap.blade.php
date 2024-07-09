@@ -70,18 +70,18 @@
     <table style="width: 100%">
       <tr>
         <td style="width:30px;">
-          {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" width="120" height="70" alt=""> --}}
+          <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" width="120" height="70" alt="">
           {{-- <img src="{{asset('assets/img/web-logo.png')}}" width="120" height="70" alt=""> --}}
           {{-- <img src="{{asset('assets/img/app-logo.jpg')}}" width="120" height="70" alt=""> --}}
-          <img src="{{asset('assets/img/blm.jpg')}}" width="120" height="70" alt="">
+          {{-- <img src="{{asset('assets/img/blm.jpg')}}" width="120" height="70" alt=""> --}}
         </td>
         <td>
           <span id="title">LAPORAN ABSENSI KARYAWAN <br>
             PERIODE {{ strtoupper($namabulan[$bulans]) }} {{ $tahun }} <br>
-            {{-- PT Satria Digital Sejahtera --}}
+            PT Satria Digital Sejahtera
             {{-- PT Ainiyah Indomitra Sejahtera --}}
             {{-- PT Astama Cahaya Karya --}}
-            PT Berkah Laju Mitra
+            {{-- PT Berkah Laju Mitra --}}
           </span>
 
         </td>
@@ -95,13 +95,14 @@
         <th rowspan="3">Email</th>
         <th rowspan="3">Nama</th>
         <th rowspan="3">Jabatan</th>
-        <th colspan="{{$totalDays * 2}}">Tanggal</th>
+        <th colspan="{{$totalDays * 3}}">Tanggal</th>
         <th rowspan="3">TM</th>
         <th rowspan="3">TK</th>
         <th rowspan="3">TI</th>
         <th rowspan="3">TS</th>
         <th rowspan="3">TA</th>
         <th rowspan="3">TH</th>
+        <th rowspan="3">TJK</th>
       </tr>
 
       {{-- Tanggal --}}
@@ -109,7 +110,7 @@
         <?php 
         for($i=1; $i<=$totalDays; $i++) {
         ?>
-        <th colspan="2">{{$i}}</th>
+        <th colspan="3">{{$i}}</th>
         <?php
         }
         ?>
@@ -120,6 +121,7 @@
         ?>
         <th>Masuk</th>
         <th>Keluar</th>
+        <th>Jam Kerja</th>
         <?php
         }
         ?>
@@ -143,15 +145,23 @@
         for($i=1; $i <= $totalDays; $i++) {
             $dayKey = (string)$i; // Convert $i to string to match keys
 
-            $tgl = "tgl_".$dayKey;
+            $tgl = "tgl_" . $dayKey;
+            $thour = "total_hours_" . $dayKey;
+            $tmin = "total_minutes_" . $dayKey;
             $hadir = ['', '']; // Default empty array for Masuk and Keluar
 
-            if (isset($d[$dayKey])) { // Check if the value is set
-                if (!empty($d[$dayKey])) { // Check if the value is not empty
+            if($d[$thour] !== null && $d[$thour] > 0) {
+              $total_time = $d[$thour] . " Jam " . $d[$tmin] . " Menit";
+            } else {
+              $total_time = '-';
+            }
+
+            if (isset($d[$tgl])) { // Check if the value is set
+                if (!empty($d[$tgl])) { // Check if the value is not empty
                     // If the value is not null or empty, process it
                     // Check if $d->$tgl contains '-' to determine if it's concatenated
-                    if (strpos($d[$dayKey], '-') !== false) {
-                        $hadir = explode("-", $d[$dayKey]);
+                    if (strpos($d[$tgl], '-') !== false) {
+                        $hadir = explode("-", $d[$tgl]);
                         // If it's concatenated, count as Masuk and Keluar
                         if($hadir[0] != '') {
                             $totalmasuk++;
@@ -164,22 +174,22 @@
 
                     } else {
                         // If it's a single value, count based on its type
-                        switch ($d[$dayKey]) {
+                        switch ($d[$tgl]) {
                             case 'I':
-                                $hadir[0] = $d[$dayKey];
-                                $hadir[1] = $d[$dayKey];
+                                $hadir[0] = $d[$tgl];
+                                $hadir[1] = $d[$tgl];
                                 $totalizin++;
                                 $totalhadir++;
                                 break;
                             case 'S':
-                                $hadir[0] = $d[$dayKey];
-                                $hadir[1] = $d[$dayKey];
+                                $hadir[0] = $d[$tgl];
+                                $hadir[1] = $d[$tgl];
                                 $totalsakit++;
                                 $totalhadir++;
                                 break;
                             case 'LIBUR':
-                                $hadir[0] = $d[$dayKey];
-                                $hadir[1] = $d[$dayKey];
+                                $hadir[0] = $d[$tgl];
+                                $hadir[1] = $d[$tgl];
                                 break;
                             default:
                                 $totalalpha++; // Increment totalalpha for unspecified cases
@@ -195,12 +205,9 @@
                 $totalalpha++;
             }
             ?>
-        <td class="text-center">
-          {{$hadir[0]}}
-        </td>
-        <td class="text-center">
-          {{$hadir[1]}}
-        </td>
+        <td class="text-center">{{ $hadir[0] }}</td>
+        <td class="text-center">{{ $hadir[1] }}</td>
+        <td class="text-center">{{ $total_time }}</td>
         <?php
         }
         ?>
@@ -210,6 +217,7 @@
         <td class="text-center">{{ $totalsakit }}</td>
         <td class="text-center">{{ $totalalpha }}</td>
         <td class="text-center">{{ $totalhadir }}</td>
+        <td>{{$d['total_hours_month'] . ' Jam ' . $d['total_minutes_month'] . " Menit"}}</td>
 
       </tr>
       @endforeach

@@ -22,10 +22,17 @@ class UserController extends Controller
 
 		if (auth()->user()->jabatan == 'TEAM WAGNER') {
 			$user = User::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->get();
+		} else if (auth()->user()->jabatan == 'ADMIN') {
+			$user = User::where('jabatan', 'KORLAP')->orderBy('nama')->get();
 		} else {
 			$user = User::orderBy('nama')->get();
 		}
-		$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
+
+		if (auth()->user()->jabatan == 'ADMIN') {
+			$jumlahIzin = Pengajuan_Izin::leftJoin('users', 'pengajuan_izin.email', '=', 'users.email')->select('*')->where('status_approved', 0)->where('users.jabatan', 'KORLAP')->count();
+		} else {
+			$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
+		}
 
 		$email = auth()->user()->email;
 		$hariini = date("Y-m-d");

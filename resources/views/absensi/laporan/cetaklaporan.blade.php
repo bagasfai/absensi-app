@@ -69,17 +69,17 @@
     <table style="width: 100%">
       <tr>
         <td style="width:30px;">
-          {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" width="120" height="70" alt=""> --}}
+          <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" width="120" height="70" alt="">
           {{-- <img src="{{asset('assets/img/web-logo.png')}}" width="120" height="70" alt=""> --}}
           {{-- <img src="{{asset('assets/img/app-logo.jpg')}}" width="120" height="70" alt=""> --}}
-          <img src="{{asset('assets/img/blm.jpg')}}" width="120" height="70" alt="">
+          {{-- <img src="{{asset('assets/img/blm.jpg')}}" width="120" height="70" alt=""> --}}
         </td>
         <td>
           <span id="title">LAPORAN ABSENSI KARYAWAN <br>
             PERIODE {{ strtoupper($namabulan[$bulan]) }} {{ $tahun }} <br>
-            {{-- PT Satria Digital Sejahtera --}}
+            PT Satria Digital Sejahtera
             {{-- PT Astama Cahaya Karya --}}
-            PT Berkah Laju Mitra
+            {{-- PT Berkah Laju Mitra --}}
           </span>
 
         </td>
@@ -124,6 +124,7 @@
         <th>Jam Keluar</th>
         <th>Laporan Keluar</th>
         <th>Foto</th>
+        <th>Jam Kerja</th>
       </tr>
       @foreach ($absen as $a)
       @php
@@ -147,6 +148,7 @@
           Tidak ada foto.
           @endif
         </td>
+        <td>{{ $a->total_time }}</td>
       </tr>
       @endforeach
     </table>

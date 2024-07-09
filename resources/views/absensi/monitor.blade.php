@@ -53,6 +53,7 @@
                       <tr>
                         <th>No.</th>
                         <th>Nama</th>
+                        <th>Tanggal</th>
                         <th>Absen Masuk</th>
                         <th>Posisi Absen</th>
                         <th>Laporan Masuk</th>
@@ -102,8 +103,6 @@
     , format: 'yyyy-mm-dd'
   });
 
-  $('#dataTable').DataTable({});
-
   function loadabsensi() {
     var tanggal = $('#tanggal').val();
 
@@ -115,8 +114,56 @@
         , tanggal: tanggal
       }
       , cache: false
-      , success: function(respond) {
-        $("#loadabsen").html(respond);
+      , dataType: "json"
+      , success: function(data) {
+        console.log(data.absens);
+        if ($.fn.DataTable.isDataTable('#dataTable')) {
+          $('#dataTable').DataTable().destroy();
+        }
+        $("#dataTable").DataTable({
+          "data": data.absens
+          , "responsive": true
+          , "columns": [{
+              "data": "id"
+            }
+            , {
+              "data": "nama"
+            }
+            , {
+              "data": "tanggal"
+            }
+            , {
+              "data": "jam_masuk"
+            }
+            , {
+              "data": "lokasi_masuk"
+            }
+            , {
+              "data": "laporan_masuk"
+            }
+            , {
+              "data": "foto_masuk"
+              , "render": function(data, type, row) {
+                return '<img src="/storage/uploads/absensi/' + data + '" width="50" height="50" class="avatar">';
+              }
+            }
+            , {
+              "data": "jam_keluar"
+            }
+            , {
+              "data": "lokasi_keluar"
+            }
+            , {
+              "data": "laporan_keluar"
+            }
+            , {
+              "data": "foto_keluar"
+              , "render": function(data, type, row) {
+                return '<img src="/storage/uploads/absensi/' + data + '" width="50" height="50" class="avatar">';
+              }
+            }
+          , ]
+        });
       }
     })
   }

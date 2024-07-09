@@ -57,7 +57,7 @@ Route::middleware('auth')->group(function () {
 
     // absensi
     Route::get('/absen/monitor', [AbsensiController::class, 'monitor'])->name('absen.monitor');
-    Route::post('/getpresensi', [AbsensiController::class, 'getpresensi'])->name('absen.getabsen');
+    Route::post('/getpresensi', [AbsensiController::class, 'records'])->name('absen.getabsen');
     Route::post('/getrekappresensi', [AbsensiController::class, 'getRekapPresensi'])->name('absen.getRekapAbsen');
     Route::post('/showmap', [AbsensiController::class, 'showmap'])->name('absen.showmap');
     Route::get('/absen/laporan', [AbsensiController::class, 'laporan'])->name('absen.laporan');
@@ -73,7 +73,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware('auth', 'jabatan:SUPERADMIN,TEAM WAGNER')->group(function () {
+Route::middleware('auth', 'jabatan:SUPERADMIN,TEAM WAGNER,ADMIN')->group(function () {
     // Route::get('/panel', function () {
     //     return view('auth.loginadmin');
     // })->name('loginadmin');

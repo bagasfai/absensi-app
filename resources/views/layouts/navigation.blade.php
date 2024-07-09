@@ -22,7 +22,7 @@ $path = Storage::url('/uploads/background-card.png');
             {{ __('Dashboard') }}
           </x-nav-link>
           <br>
-          @if(auth()->user()->jabatan === 'SUPERADMIN' || auth()->user()->jabatan === 'TEAM WAGNER')
+          @if(auth()->user()->jabatan === 'SUPERADMIN' || auth()->user()->jabatan === 'TEAM WAGNER' || auth()->user()->jabatan === 'ADMIN')
           <x-nav-link :href="route('dashboardadmin')" :active="request()->routeIs('dashboardadmin')">
             {{ __('Admin Page') }}
           </x-nav-link>
