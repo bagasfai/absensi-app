@@ -15,8 +15,8 @@
 
 <div class="page-body">
   <div class="container-xl">
-    <div class=" w-full">
-      <div class="mx-auto bg-white rounded-md overflow-hidden shadow-md">
+    <div class="w-full ">
+      <div class="mx-auto overflow-hidden rounded-md shadow-md">
         <div class="row">
           <div class="col-12">
             @if (Session::get('success'))
@@ -44,15 +44,15 @@
         <div class="p-4">
           <form action="{{route('user.index')}}" method="GET">
           </form>
-          <table class="w-full border border-gray-800 rounded mb-2" id="dataTable">
+          <table class="w-full mb-2 border border-gray-800 rounded" id="dataTable">
             <thead>
               <tr>
-                <th class="text-center border px-4 py-2 bg-gray-800">No. </th>
-                <th class="text-center border px-4 py-2 bg-gray-800">Nama</th>
-                <th class="text-center border px-4 py-2 bg-gray-800">Email</th>
-                <th class="text-center border px-4 py-2 bg-gray-800">Jabatan</th>
-                <th class="text-center border px-4 py-2 bg-gray-800">Foto</th>
-                <th class="text-center border px-4 py-2 bg-gray-800">Aksi</th>
+                <th class="px-4 py-2 text-center bg-gray-800 border">No. </th>
+                <th class="px-4 py-2 text-center bg-gray-800 border">Nama</th>
+                <th class="px-4 py-2 text-center bg-gray-800 border">Email</th>
+                <th class="px-4 py-2 text-center bg-gray-800 border">Jabatan</th>
+                <th class="px-4 py-2 text-center bg-gray-800 border">Foto</th>
+                <th class="px-4 py-2 text-center bg-gray-800 border">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -64,11 +64,11 @@
               $path = Storage::url('uploads/karyawan/' . $u->foto);
               @endphp
               <tr>
-                <td class="border text-center">{{$no++}}</td>
-                <td class="border px-2">{{$u->nama}}</td>
-                <td class="border px-2">{{$u->email}}</td>
-                <td class="border text-center">{{$u->jabatan}}</td>
-                <td class="border text-center">
+                <td class="text-center border">{{$no++}}</td>
+                <td class="px-2 border">{{$u->nama}}</td>
+                <td class="px-2 border">{{$u->email}}</td>
+                <td class="text-center border">{{$u->jabatan}}</td>
+                <td class="text-center border">
                   @if(empty($u->foto))
                   {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" class="avatar" alt="Foto User"> --}}
                   {{-- <img src="{{asset('assets/img/web-logo.png')}}" class="avatar" alt="Foto User"> --}}
@@ -122,7 +122,7 @@
 
           <div class="row">
             <div class="col-12">
-              <div class="input-icon mb-3">
+              <div class="mb-3 input-icon">
                 <span class="input-icon-addon">
                   <!-- Download SVG icon from http://tabler-icons.io/i/user -->
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -151,7 +151,7 @@
 
           <div class="row">
             <div class="col-12">
-              <div class="input-icon mb-3">
+              <div class="mb-3 input-icon">
                 <span class="input-icon-addon">
                   <!-- Download SVG icon from http://tabler-icons.io/i/user -->
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-mail" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -166,7 +166,7 @@
 
           <div class="row">
             <div class="col-12">
-              <div class="input-icon mb-3">
+              <div class="mb-3 input-icon">
                 <span class="input-icon-addon">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-telegram" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />

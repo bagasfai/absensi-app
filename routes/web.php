@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Models\Absen;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\QuizController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,11 +32,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/absen/store', [AbsensiController::class, 'store'])->name('absen.store');
     Route::get('/absen/create', [AbsensiController::class, 'create'])->name('absen.create');
     Route::get('/absen/keluar', [AbsensiController::class, 'keluar'])->name('absen.keluar');
-    Route::post('/absen/create', [AbsensiController::class, 'absenMasuk'])->name('absen.absenMasuk');
-    Route::post('/absen/keluar', [AbsensiController::class, 'absenKeluar'])->name('absen.absenKeluar');
     Route::get('/absen/{absen}/edit', [AbsensiController::class, 'edit'])->name(('absen.edit'));
     Route::put('/absen/{absen}/update', [AbsensiController::class, 'update'])->name(('absen.update'));
     Route::delete('/absen/{absen}/delete', [AbsensiController::class, 'delete'])->name(('absen.delete'));
+    Route::get('/absen/quiz', [QuizController::class, 'checkQuizForToday'])->name('absens.checkQuiz');
 
     // edit profiel
     Route::get('/absen/editprofile', [AbsensiController::class, 'editprofile'])->name('editprofile');
@@ -71,6 +71,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/quiz', [QuizController::class, 'index'])->name('quiz.index');
+    Route::get('/quiz/laporan', [QuizController::class, 'laporan'])->name('quiz.laporan');
+    Route::get('/quiz/create', [QuizController::class, 'create'])->name('quiz.create');
+    Route::get('/quiz/edit/{id}', [QuizController::class, 'edit'])->name('quiz.edit');
+    Route::post('/quiz/update/{id}', [QuizController::class, 'update'])->name('quiz.update');
+    Route::post('/quiz/store', [QuizController::class, 'store'])->name('quiz.store');
+    Route::get('/quiz/dates', [QuizController::class, 'getQuizDates'])->name('quiz.dates');
+    Route::get('/quiz/jawaban/edit/{id}', [QuizController::class, 'editJawaban'])->name('quiz.edit_jawaban');
+    Route::post('/quiz/jawaban/update/{id}', [QuizController::class, 'updateJawaban'])->name('quiz.update_jawaban');
+    Route::post('/quiz/getquiz', [QuizController::class, 'getQuiz'])->name('quiz.getquiz');
 });
 
 Route::middleware('auth', 'jabatan:SUPERADMIN,TEAM WAGNER,ADMIN')->group(function () {

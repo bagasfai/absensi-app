@@ -127,6 +127,7 @@ class UserController extends Controller
 		$email = $request->email;
 		$password = $request->password;
 		$old_foto = $request->old_foto;
+		$id_telegram = $request->telegram;
 
 		if ($request->hasFile('foto')) {
 			$foto = $email . "." . $request->file('foto')->getClientOriginalExtension();
@@ -140,6 +141,7 @@ class UserController extends Controller
 				'jabatan' => $jabatan,
 				'email' => $email,
 				'foto' => $foto,
+				'id_telegram' => $id_telegram
 			];
 
 			// Hash the password if it's not empty

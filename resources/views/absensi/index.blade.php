@@ -18,7 +18,7 @@
 <div class="page-body">
   <div class="container-xl">
     <div class="w-full">
-      <div class="mx-auto bg-white rounded-md overflow-hidden shadow-md">
+      <div class="mx-auto overflow-hidden rounded-md shadow-md">
         <div class="row">
           @if(session()->has('success'))
           <div class="">
@@ -32,7 +32,7 @@
               @csrf
               <label for="tanggal" class="col-form-label">Periode</label>
               <div class="col-2">
-                <div class="input-icon mb-3">
+                <div class="mb-3 input-icon">
                   <input type="month" name="tanggal" id="tanggal" class="form-control" placeholder="Tanggal Absensi" autocomplete="off" value="{{ session('periode') ? session('periode') : date('Y-m') }}">
                 </div>
               </div>
@@ -44,7 +44,7 @@
 
           <div class="table-responsive">
 
-            <table border="1" class="w-full border border-gray-800 rounded mb-2" id="dataTable">
+            <table border="1" class="w-full mb-2 border border-gray-800 rounded" id="dataTable">
               <thead>
                 <tr>
                   <th class="border border-slate-400">ID</th>

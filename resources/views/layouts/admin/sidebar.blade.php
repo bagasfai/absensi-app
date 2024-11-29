@@ -8,7 +8,7 @@
         <img src="{{asset('tabler/static/logo.svg')}}" width="110" height="32" alt="Tabler" class="navbar-brand-image">
       </a>
     </h1>
-    <div class="navbar-nav flex-row d-lg-none">
+    <div class="flex-row navbar-nav d-lg-none">
       <div class="nav-item d-none d-lg-flex me-3">
         <div class="btn-list">
           <a href="https://github.com/tabler/tabler" class="btn" target="_blank" rel="noreferrer">
@@ -28,13 +28,13 @@
         </div>
       </div>
       <div class="d-none d-lg-flex">
-        <a href="?theme=dark" class="nav-link px-0 hide-theme-dark" title="Enable dark mode" data-bs-toggle="tooltip" data-bs-placement="bottom">
+        <a href="?theme=dark" class="px-0 nav-link hide-theme-dark" title="Enable dark mode" data-bs-toggle="tooltip" data-bs-placement="bottom">
           <!-- Download SVG icon from http://tabler-icons.io/i/moon -->
           <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
             <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" /></svg>
         </a>
-        <a href="?theme=light" class="nav-link px-0 hide-theme-light" title="Enable light mode" data-bs-toggle="tooltip" data-bs-placement="bottom">
+        <a href="?theme=light" class="px-0 nav-link hide-theme-light" title="Enable light mode" data-bs-toggle="tooltip" data-bs-placement="bottom">
           <!-- Download SVG icon from http://tabler-icons.io/i/sun -->
           <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -42,7 +42,7 @@
             <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" /></svg>
         </a>
         <div class="nav-item dropdown d-none d-md-flex me-3">
-          <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
+          <a href="#" class="px-0 nav-link" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
             <!-- Download SVG icon from http://tabler-icons.io/i/bell -->
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -138,7 +138,7 @@
         </div>
       </div>
       <div class="nav-item dropdown">
-        <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+        <a href="#" class="p-0 nav-link d-flex lh-1 text-reset" data-bs-toggle="dropdown" aria-label="Open user menu">
           <span class="avatar avatar-sm" style="background-image: url(./static/avatars/000m.jpg)"></span>
           <div class="d-none d-xl-block ps-2">
             <div>Paweł Kuna</div>
@@ -233,7 +233,7 @@
                 <path d="M7 10h2l2 3l2 -6l1 3h3" /></svg>
             </span>
             <span class="nav-link-title">
-              Pengajuan Izin / Sakit <small class="badge badge-danger bg-red text-white d-block">{{ $jumlahIzin }}</small>
+              Pengajuan Izin / Sakit <small class="text-white badge badge-danger bg-red d-block">{{ $jumlahIzin }}</small>
             </span>
           </a>
         </li>
@@ -267,7 +267,44 @@
           </div>
         </li>
 
-        <li class="nav-item mt-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {{ request()->is(['quiz', 'quiz/*']) ? 'show' : '' }}" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="{{ request()->is(['quiz/*']) ? 'true' : '' }}">
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+              <!-- Download SVG icon from http://tabler-icons.io/i/package -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-puzzle">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M4 7h3a1 1 0 0 0 1 -1v-1a2 2 0 0 1 4 0v1a1 1 0 0 0 1 1h3a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h1a2 2 0 0 1 0 4h-1a1 1 0 0 0 -1 1v3a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-1a2 2 0 0 0 -4 0v1a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h1a2 2 0 0 0 0 -4h-1a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1" /></svg>
+            </span>
+            <span class="nav-link-title">
+              Quiz
+            </span>
+          </a>
+          <div class="dropdown-menu {{ request()->is(['quiz', 'quiz/*']) ? 'show' : '' }}">
+            <div class="dropdown-menu-columns">
+              <div class="dropdown-menu-column">
+                <a class="dropdown-item {{ request()->is(['quiz']) ? 'active' : '' }}" href="{{route('quiz.index')}}">
+                  Quiz
+                </a>
+                <a class="dropdown-item {{ request()->is(['quiz/laporan']) ? 'active' : '' }}" href="{{route('quiz.laporan')}}">
+                  Laporan Quiz
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        {{-- <li class="nav-item">
+          <a class="nav-link {{ request()->is(['quiz', 'quiz/*']) ? 'active' : '' }}" href="{{route('quiz.index')}}">
+        <span class="nav-link-icon d-md-none d-lg-inline-block">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-puzzle">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M4 7h3a1 1 0 0 0 1 -1v-1a2 2 0 0 1 4 0v1a1 1 0 0 0 1 1h3a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h1a2 2 0 0 1 0 4h-1a1 1 0 0 0 -1 1v3a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-1a2 2 0 0 0 -4 0v1a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h1a2 2 0 0 0 0 -4h-1a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1" /></svg>
+        </span>
+        <span class="nav-link-title">Quiz</span>
+        </a>
+        </li> --}}
+
+        <li class="mt-auto nav-item">
           <a class="nav-link {{ request()->is(['absen/izinsakit']) ? 'active' : '' }}" href="{{route('absen.dashboard')}}">
             <span class="nav-link-icon d-md-none d-lg-inline-block">
               <!-- Download SVG icon from http://tabler-icons.io/i/home -->

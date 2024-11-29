@@ -7,6 +7,8 @@ use Illuminate\Support\Carbon;
 use App\Models\Absen;
 use App\Models\User;
 use App\Models\Pengajuan_Izin;
+use App\Models\Quiz;
+use App\Models\QuizAnswer;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +23,23 @@ class DashboardController extends Controller
 		$bulan = date('m') * 1;
 		$absen = Absen::where('tanggal', $hariini)->where('email', $email)->orderBy('id', 'desc')->first();
 		$currentDateTime = now();
+		$quiz = null;
+		$quizAnswer = null;
+
+		if (auth()->user()->jabatan == 'PMR' || auth()->user()->jabatan == 'WH') {
+			$today = now()->toDateString();
+
+			// Find quizzes assigned to this user for today
+			$quiz = Quiz::whereDate('jadwal', $today)
+				->whereJsonContains('assign_to', auth()->user()->id)
+				->first();
+
+			if ($quiz) {
+				$quizAnswer = QuizAnswer::where('quiz_id', $quiz->id)
+					->where('user_id', auth()->user()->id)
+					->first();
+			}
+		}
 
 		$latestEntry = Absen::select('*', DB::raw('CONCAT(tanggal, " ", jam_masuk) as datetime'))
 			->where('email', $email)
@@ -108,7 +127,7 @@ class DashboardController extends Controller
 			->first();
 
 
-		return view('dashboard', compact('absen', 'cek', 'user', 'absenBulan', 'namaBulan', 'bulan', 'tahun', 'rekapAbsen', 'daftarHadir', 'rekapIzin', 'latestEntry', 'selisihWaktu', 'selisihWaktuOut'));
+		return view('dashboard', compact('absen', 'cek', 'user', 'absenBulan', 'namaBulan', 'bulan', 'tahun', 'rekapAbsen', 'daftarHadir', 'rekapIzin', 'latestEntry', 'selisihWaktu', 'selisihWaktuOut', 'quiz', 'quizAnswer'));
 	}
 
 	public function dashboardadmin()

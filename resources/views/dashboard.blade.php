@@ -3,7 +3,7 @@
 @section('content')
 
 <x-slot name="header">
-  <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+  <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
     {{ __('Dashboard') }}
   </h2>
 </x-slot>
@@ -17,7 +17,7 @@
 <!-- App Capsule -->
 <div id="" class="pb-1">
   <!-- appCapsule -->
-  <div class="section mb-4" id="user-section">
+  <div class="mb-4 section" id="user-section">
     <div id="user-detail">
       <div class="avatar">
         @if(!empty(auth()->user()->foto))
@@ -33,7 +33,7 @@
         $path = asset('assets/img/blm.jpg');
         @endphp
         @endif
-        <img src="{{ $path }}" alt="avatar" class="imaged w-24 h-16 bg-white" />
+        <img src="{{ $path }}" alt="avatar" class="w-24 h-16 bg-white imaged" />
       </div>
       <div id="user-info">
         <h2 id="user-name">{{ auth()->user()->nama}}</h2>
@@ -42,12 +42,12 @@
     </div>
   </div>
 
-  <div class="section mb-4" id="">
+  <div class="mb-4 section" id="">
     <!-- menu-section -->
     <div class="card">
-      <div class="card-body text-center">
+      <div class="text-center card-body">
         <div class="list-menu">
-          <div class="item-menu text-center">
+          <div class="text-center item-menu">
             <div class="menu-icon">
               <a href="{{route('editprofile')}}" class="green" style="font-size: 40px">
                 <ion-icon name="person-sharp"></ion-icon>
@@ -58,7 +58,7 @@
               </a>
             </div>
           </div>
-          <div class="item-menu text-center">
+          <div class="text-center item-menu">
             <div class="menu-icon">
               <a href="{{route('absen.izin')}}" class="danger" style="font-size: 40px">
                 <ion-icon name="calendar-number"></ion-icon>
@@ -68,7 +68,7 @@
               <span class="text-center">Cuti</span>
             </div>
           </div>
-          <div class="item-menu text-center">
+          <div class="text-center item-menu">
             <div class="menu-icon">
               <a href="{{route('absen.histori')}}" class="warning" style="font-size: 40px">
                 <ion-icon name="document-text"></ion-icon>
@@ -82,11 +82,11 @@
       </div>
     </div>
   </div>
-  <div class="section mb-4" id="">
+  <div class="mb-4 section" id="">
     <!-- presence-section -->
     <div class="">
       <div class="row">
-        <div class="col-6 mb-4">
+        <div class="mb-4 col-6">
           <div class="card gradasigreen">
             <div class="card-body">
               <div class="presencecontent">
@@ -129,37 +129,66 @@
       </div>
     </div>
 
+    @if($quiz && auth()->user()->jabatan == "PMR" || auth()->user()->jabatan == "WH")
+    <div class="mb-4 shadow-sm card">
+      <div class="text-white card-header bg-primary">
+        <h5 class="mb-0 text-white">Quiz Hari Ini</h5>
+      </div>
+      <div class="card-body">
+        <!-- Quiz Question -->
+        <h6 class="card-title text-muted">Pertanyaan:</h6>
+        <p class="card-text">{{ $quiz->pertanyaan }}</p>
+
+        @if($quizAnswer)
+        <!-- User's Answer -->
+        <hr>
+        <h6 class="card-title text-muted">Jawabanmu:</h6>
+        <p class="card-text">{{ $quizAnswer->jawaban }}</p>
+
+        <!-- Calculate Remaining Edit Time -->
+        @php
+        $canEdit = now()->diffInMinutes($quizAnswer->created_at) <= $quiz->durasi_edit;
+          @endphp
+
+          @if($canEdit && $quizAnswer->is_edit != 1)
+          <a href="{{ route('quiz.edit_jawaban', ['id' => $quizAnswer->id]) }}" class="w-full btn btn-warning">Edit Jawaban</a>
+          @endif
+
+          @if(session('success'))
+          <div class="mt-1 text-center alert alert-success fade show" role="alert">
+            {{ session('success') }}
+          </div>
+          @endif
+          @endif
+      </div>
+    </div>
+    @endif
+
     <div class="" id="rekap-absen">
       <h3>Rekap Absen Bulan {{ $namaBulan[$bulan] }} Tahun {{ $tahun }}</h3>
-      <div class="mx-auto max-w-screen-lg grid grid-cols-3 gap-2">
+      <div class="grid max-w-screen-lg grid-cols-3 gap-2 mx-auto">
 
-        <div class="flex flex-col justify-center items-center max-w-sm h-16 rounded overflow-hidden shadow-lg bg-white py-1 relative">
+        <div class="relative flex flex-col items-center justify-center h-16 max-w-sm py-1 overflow-hidden bg-white rounded shadow-lg">
           <small class="absolute top-1 right-4 badge badge-danger">{{ $rekapAbsen->jumlah_hadir }}</small>
-          <ion-icon name="accessibility-outline" class="text-center text-2xl text-blue-500 bg-transparent border-transparent"></ion-icon>
+          <ion-icon name="accessibility-outline" class="text-2xl text-center text-blue-500 bg-transparent border-transparent"></ion-icon>
           <span class="text-xs">Hadir</span>
         </div>
 
-        <div class="flex flex-col justify-center items-center max-w-sm h-16 rounded overflow-hidden shadow-lg bg-white py-1 relative">
+        <div class="relative flex flex-col items-center justify-center h-16 max-w-sm py-1 overflow-hidden bg-white rounded shadow-lg">
           <small class="absolute top-1 right-4 badge badge-danger">{{$rekapIzin->jumlah_izin ? $rekapIzin->jumlah_izin : 0}}</small>
-          <ion-icon name="newspaper-outline" class="text-center text-2xl text-green-500 bg-transparent border-transparent"></ion-icon>
+          <ion-icon name="newspaper-outline" class="text-2xl text-center text-green-500 bg-transparent border-transparent"></ion-icon>
           <span class="text-xs">Izin</span>
         </div>
 
-        <div class="flex flex-col justify-center items-center max-w-sm h-16 rounded overflow-hidden shadow-lg bg-white py-1 relative">
+        <div class="relative flex flex-col items-center justify-center h-16 max-w-sm py-1 overflow-hidden bg-white rounded shadow-lg">
           <small class="absolute top-1 right-4 badge badge-danger">{{$rekapIzin->jumlah_sakit ? $rekapIzin->jumlah_sakit : 0}}</small>
-          <ion-icon name="medkit-outline" class="text-center text-2xl text-yellow-500 bg-transparent border-transparent"></ion-icon>
+          <ion-icon name="medkit-outline" class="text-2xl text-center text-yellow-500 bg-transparent border-transparent"></ion-icon>
           <span class="text-xs">Sakit</span>
         </div>
-
-        {{-- <div class="flex flex-col justify-center items-center max-w-sm h-16 rounded overflow-hidden shadow-lg bg-white py-1 relative">
-          <small class="absolute top-1 right-4 badge badge-danger">0</small>
-          <ion-icon name="alarm-outline" class="text-center text-2xl text-red-500 bg-transparent border-transparent"></ion-icon>
-          <span class="text-xs">Alpha</span>
-        </div> --}}
       </div>
     </div>
 
-    <div class="presencetab mt-2">
+    <div class="mt-2 presencetab">
       <div class="tab-pane fade show active" id="pilled" role="tabpanel">
         <ul class="nav nav-tabs style1" role="tablist">
           <li class="nav-item">
@@ -176,7 +205,7 @@
           @endif
         </ul>
       </div>
-      <div class="tab-content mt-2" style="margin-bottom: 100px">
+      <div class="mt-2 tab-content" style="margin-bottom: 100px">
         <div class="tab-pane fade show active" id="home" role="tabpanel">
           <ul class="listview image-listview">
             @foreach ($absenBulan as $bulan )
@@ -226,6 +255,4 @@
   </div>
 </div>
 <!-- * App Capsule -->
-
-
 @endsection

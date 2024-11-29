@@ -16,41 +16,46 @@
 @section('content')
 <div class="">
   <div class="mx-auto sm:px-4 lg:px-6">
-    <div class="vh-100 bg-gray-900 dark:bg-gray-900 overflow-hidden shadow-sm sm:rounded-lg">
-      <div class="grid grid-rows-1 py-1 px-3">
+    <div class="bg-gray-900 shadow-sm dark:bg-gray-900 sm:rounded-lg">
+      <div class="grid grid-rows-1 px-3 py-1">
         <input type="hidden" name="lokasi" id="lokasi">
         <div class="webcam-capture"></div>
       </div>
-      <div class="grid grid-rows-1 pb-3 px-3 items-center justify-center">
+      <div class="grid items-center justify-center grid-rows-1 px-3 pb-3">
         <div id="canvasContainer" class="grid grid-cols-3"></div>
       </div>
-      <div class="grid grid-rows-1 pb-1 px-3">
+      <div class="grid grid-rows-1 px-3 pb-1">
         <label for="laporan" class="block text-sm font-medium leading-6 text-white">Laporan</label>
         <div>
           <textarea id="laporan" name="laporan" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></textarea>
         </div>
       </div>
-      <div class="grid grid-rows-1 pb-1 px-3">
+      @if(auth()->user()->jabatan == 'SUPERADMIN' || auth()->user()->jabatan == 'PMR' && $quiz && !$quizAnswer)
+      <div class="grid grid-rows-1 px-3 pb-1">
+        <label for="quiz" class="block text-sm font-medium leading-6 text-white">Quiz</label>
+        <textarea name="quiz" id="quiz" cols="30" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" readonly>{{ $quiz->pertanyaan }}</textarea>
+      </div>
+      <div class="grid grid-rows-1 px-3 pb-1">
+        <label for="jawaban" class="block text-sm font-medium leading-6 text-white">Jawaban</label>
+        <textarea name="jawaban" id="jawaban" cols="30" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></textarea>
+        <input type="file" class="form-control" name="quizFile" id="quizFile">
+      </div>
+      @endif
+      <div class="grid grid-rows-1 px-3 pb-1">
         <div class="" id="map"></div>
       </div>
       <div class="grid grid-rows-1 px-3" style="padding-bottom: 100px;">
         @if($cek)
-        @if($selisihWaktu < 15) <button id="takeAbsenKeluar" onclick="submitAbsen('Keluar')" class="bg-red-500 hover:bg-red-700 font-bold py-2 px-4 rounded text-white text-center pb-10">
+        <button id="takeAbsenKeluar" onclick="submitAbsen('Keluar')" class="px-4 py-2 pb-10 font-bold text-center text-white bg-red-500 rounded hover:bg-red-700">
           <ion-icon name="camera-outline" class="text-center"></ion-icon>
           Absen Keluar
-          </button>
-          @else
-          <button id="takeAbsenMasuk" onclick="submitAbsen('Masuk')" class="bg-cyan-500 hover:bg-cyan-700 font-bold py-2 px-4 rounded text-white text-center pb-10">
-            <ion-icon name="camera-outline" class="text-center"></ion-icon>
-            Absen Masuk
-          </button>
-          @endif
-          @else
-          <button id="takeAbsenMasuk" onclick="submitAbsen('Masuk')" class="bg-cyan-500 hover:bg-cyan-700 font-bold py-2 px-4 rounded text-white text-center pb-10">
-            <ion-icon name="camera-outline" class="text-center"></ion-icon>
-            Absen Masuk
-          </button>
-          @endif
+        </button>
+        @else
+        <button id="takeAbsenMasuk" onclick="submitAbsen('Masuk')" class="px-4 py-2 pb-10 font-bold text-center text-white rounded bg-cyan-500 hover:bg-cyan-700">
+          <ion-icon name="camera-outline" class="text-center"></ion-icon>
+          Absen Masuk
+        </button>
+        @endif
       </div>
     </div>
   </div>
@@ -125,14 +130,18 @@
   Webcam.attach('.webcam-capture');
 
   $("#takeAbsenMasuk").click(function(e) {
+    e.preventDefault();
+
     const jenisAbsen = 'masuk';
     Webcam.snap(function(uri) {
       image = uri;
     });
 
     var lokasi = $("#lokasi").val();
-    console.log(lokasi);
     var laporan = $("#laporan").val();
+    var quiz = $("#quiz").val();
+    var jawaban = $("#jawaban").val();
+    var quizFile = $("#quizFile")[0].files[0];
 
     if (laporan == "") {
       Swal.fire({
@@ -145,16 +154,24 @@
 
     $('#takeAbsenMasuk').attr('disabled', true);
 
+    var formData = new FormData();
+    formData.append('_token', "{{ csrf_token() }}");
+    formData.append('image', image);
+    formData.append('lokasi', lokasi);
+    formData.append('laporan', laporan);
+    formData.append('jenis_absen', jenisAbsen);
+    formData.append('quiz', quiz);
+    formData.append('jawaban', jawaban);
+    if (quizFile) {
+      formData.append('quizFile', quizFile); // Append the file
+    }
+
     $.ajax({
       type: 'POST'
       , url: "{{route('absen.store')}}"
-      , data: {
-        _token: "{{ csrf_token() }}"
-        , image: image
-        , lokasi: lokasi
-        , laporan: laporan
-        , jenis_absen: jenisAbsen
-      , }
+      , data: formData
+      , processData: false
+      , contentType: false
       , cache: false
       , success: function(respond) {
         var status = respond.split("|");
@@ -179,14 +196,31 @@
   });
 
   $("#takeAbsenKeluar").click(function(e) {
+    e.preventDefault();
+
     const jenisAbsen = 'keluar';
     Webcam.snap(function(uri) {
       image = uri;
     });
 
     var lokasi = $("#lokasi").val();
-    console.log(lokasi);
     var laporan = $("#laporan").val();
+    var quiz = $("#quiz").val();
+    var jawaban = $("#jawaban").val();
+    var quizFile = $("#quizFile")[0].files[0];
+
+    if (quiz) {
+      if (!jawaban || !quizFile) {
+        Swal.fire({
+          icon: "warning"
+          , title: "Jawaban harus diisi"
+          , text: "Harap mengisi jawaban atau upload foto untuk pertanyaan yang diberikan."
+          , confirmButtonText: "OK"
+        });
+
+        return false;
+      }
+    }
 
     if (laporan == "") {
       Swal.fire({
@@ -198,17 +232,24 @@
     }
     $('#takeAbsenKeluar').attr('disabled', true);
 
+    var formData = new FormData();
+    formData.append('_token', "{{ csrf_token() }}");
+    formData.append('image', image);
+    formData.append('lokasi', lokasi);
+    formData.append('laporan', laporan);
+    formData.append('jenis_absen', jenisAbsen);
+    formData.append('quiz', quiz);
+    formData.append('jawaban', jawaban);
+    if (quizFile) {
+      formData.append('quizFile', quizFile); // Append the file
+    }
 
     $.ajax({
       type: 'POST'
       , url: "{{route('absen.store')}}"
-      , data: {
-        _token: "{{ csrf_token() }}"
-        , image: image
-        , lokasi: lokasi
-        , laporan: laporan
-        , jenis_absen: jenisAbsen
-      , }
+      , data: formData
+      , processData: false
+      , contentType: false
       , cache: false
       , success: function(respond) {
         var status = respond.split("|");

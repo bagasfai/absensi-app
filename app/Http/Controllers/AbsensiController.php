@@ -8,13 +8,12 @@ use App\Models\Absen;
 use App\Models\User;
 use App\Models\Pengajuan_Izin;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
-use Telegram\Bot\Laravel\Facades\Telegram;
 use App\Http\Controllers\TelegramController;
-use Symfony\Component\HttpFoundation\Session\Session;
+use App\Models\Quiz;
+use App\Models\QuizAnswer;
 
 
 class AbsensiController extends Controller
@@ -64,7 +63,25 @@ class AbsensiController extends Controller
   {
     $hariini = date("Y-m-d");
     $email = auth()->user()->email;
-    $cek = Absen::where('email', $email)->where('status', 'H')->whereNull('jam_keluar')->orderBy('id', 'desc')->first();
+    $cek = Absen::where('email', $email)->where('status', 'H')->where('tanggal', $hariini)->whereNull('jam_keluar')->orderBy('id', 'desc')->first();
+    $quiz = null;
+    $quizAnswer = null;
+
+    if (auth()->user()->jabatan == 'PMR' || auth()->user()->jabatan == 'WH') {
+      $today = now()->toDateString();
+
+      // Find quizzes assigned to this user for today
+      $quiz = Quiz::whereDate('jadwal', $today)
+        ->whereJsonContains('assign_to', auth()->user()->id)
+        ->first();
+
+      if ($quiz) {
+        $quizAnswer = QuizAnswer::where('quiz_id', $quiz->id)
+          ->where('user_id', auth()->user()->id)
+          ->first();
+      }
+    }
+
     $currentDateTime = now();
     $latestEntry = Absen::select(DB::raw('CONCAT(tanggal, " ", jam_masuk) as datetime'))
       ->where('email', $email)
@@ -81,7 +98,7 @@ class AbsensiController extends Controller
       $selisihWaktu = 24;
     }
 
-    return view('absensi.create', compact('cek', 'email', 'hariini', 'selisihWaktu'));
+    return view('absensi.create', compact('cek', 'email', 'hariini', 'selisihWaktu', 'quiz', 'quizAnswer'));
   }
 
   public function store(Request $request)
@@ -100,7 +117,6 @@ class AbsensiController extends Controller
       $ket = 'keluar';
     }
 
-    $cek = Absen::where('tanggal', $tanggal)->where('email', $email)->where('status', 'H')->count();
     $image = $request->image;
 
     $folderPath = "public/uploads/absensi/";
@@ -110,76 +126,98 @@ class AbsensiController extends Controller
     $fileName = $formatName . ".jpeg";
     $file = $folderPath . $fileName;
 
-
-    if ($jenisAbsen == 'masuk') {
-      // insert absen
-      $data = [
-        'email' => $email,
-        'nama' => $nama,
-        'status' => 'H',
-        'tanggal' => $tanggal,
-        'jam_masuk' => $jam,
-        'foto_masuk' => $fileName,
-        'lokasi_masuk' => $lokasi,
-        'laporan_masuk' => $laporan,
+    if ($request->quiz && $request->jawaban) {
+      $dataQuiz = [
+        'quiz_id' => Quiz::where('pertanyaan', $request->quiz)->first()->id,
         'user_id' => auth()->user()->id,
+        'jawaban' => $request->jawaban,
       ];
 
-      $simpan = Absen::insert($data);
-
-      if ($simpan) {
-        echo "success|Terimakasih, Selamat bekerja!|in";
-        Storage::put($file, $image_base64);
-      } else {
-        echo  "error|Maaf, absen tidak berhasil.|in";
+      if ($request->hasFile('quizFile')) {
+        $fileQuiz = $request->file('quizFile');
+        $folderPathQuiz = "public/uploads/quiz/";
+        $fileNameQuiz = $email . "-" . $tanggal . "-" . $nama . "." . $fileQuiz->getClientOriginalExtension();
+        $fileQuiz->storeAs($folderPathQuiz, $fileNameQuiz); // Store the file
+        $dataQuiz['file'] = $fileNameQuiz;
       }
-    } else if ($jenisAbsen == 'keluar') {
-      // update absen jika sudah absen masuk
-      $data_pulang = [
-        'tanggal_keluar' => $tanggal,
-        'jam_keluar' => $jam,
-        'foto_keluar' => $fileName,
-        'lokasi_keluar' => $lokasi,
-        'laporan_keluar'   => $laporan,
-      ];
+    }
 
-      $update = Absen::where('email', $email)
-        ->whereNotNull('jam_masuk')
-        ->orderBy('id', 'desc')
-        ->first();
+    DB::beginTransaction();
 
-      $updateKeluar = Absen::where('id', $update->id)
-        ->update($data_pulang);
+    try {
+      if ($jenisAbsen == 'masuk') {
+        // insert absen
+        $data = [
+          'email' => $email,
+          'nama' => $nama,
+          'status' => 'H',
+          'tanggal' => $tanggal,
+          'jam_masuk' => $jam,
+          'foto_masuk' => $fileName,
+          'lokasi_masuk' => $lokasi,
+          'laporan_masuk' => $laporan,
+          'user_id' => auth()->user()->id,
+        ];
 
-      if ($updateKeluar) {
-        echo "success|Terimakasih, Selamat beristirahat.|out";
-        Storage::put($file, $image_base64);
-      } else {
-        echo "error|Maaf, absen tidak berhasil.|out";
+        $simpan = Absen::create($data);
+
+        if ($request->quiz && $request->jawaban) {
+          $dataQuiz['absen_id'] = $simpan->id;
+        }
+
+        if (isset($dataQuiz)) {
+          QuizAnswer::create($dataQuiz);
+        }
+
+        if ($simpan) {
+          echo "success|Terimakasih, Selamat bekerja!|in";
+          Storage::put($file, $image_base64);
+        } else {
+          echo  "error|Maaf, absen tidak berhasil.|in";
+        }
+      } else if ($jenisAbsen == 'keluar') {
+        // update absen jika sudah absen masuk
+        $data_pulang = [
+          'tanggal_keluar' => $tanggal,
+          'jam_keluar' => $jam,
+          'foto_keluar' => $fileName,
+          'lokasi_keluar' => $lokasi,
+          'laporan_keluar'   => $laporan,
+        ];
+
+        $update = Absen::where('email', $email)
+          ->whereNotNull('jam_masuk')
+          ->orderBy('id', 'desc')
+          ->first();
+
+        $updateKeluar = Absen::where('id', $update->id)
+          ->update($data_pulang);
+
+        if ($request->quiz && $request->jawaban) {
+          $dataQuiz['absen_id'] = $update->id;
+        }
+
+        if (isset($dataQuiz)) {
+          QuizAnswer::create($dataQuiz);
+        }
+
+        if ($updateKeluar) {
+          echo "success|Terimakasih, Selamat beristirahat.|out";
+          Storage::put($file, $image_base64);
+        } else {
+          echo "error|Maaf, absen tidak berhasil.|out";
+        }
       }
+      DB::commit();
+    } catch (\Exception $error) {
+      DB::rollBack();
+      dd($error->getMessage());
     }
   }
 
   public function edit(Absen $absen)
   {
     return view('absensi.edit', ['absen' => $absen]);
-  }
-
-  public function update(Absen $absen, Request $request)
-  {
-    $data = $request->validate([
-      'email' => 'required|email',
-      'nama' => 'required|string',
-      'status' => 'required|in:HADIR,TIDAK HADIR,IZIN,SAKIT',
-      'keterangan' => 'nullable',
-      'posisi_absen' => 'nullable',
-      'absen_masuk' => 'nullable',
-      'absen_keluar' => 'nullable',
-    ]);
-
-    $absen->update($data);
-
-    return redirect(route('absen.index'))->with('success', 'Absen Updated Successfully');
   }
 
   public function delete(Absen $absen)
@@ -422,7 +460,6 @@ class AbsensiController extends Controller
     $endDate = Carbon::now()->endOfMonth()->addDays(25);
 
     $attendances = Absen::whereBetween('tanggal', [$startDate, $endDate])->get();
-    // dd($attendances);
 
     if ($latestEntry) {
       $lastEntryDateTime = Carbon::parse($latestEntry->datetime);
@@ -591,14 +628,6 @@ class AbsensiController extends Controller
     }
 
     return view('absensi.getrekappresensi', compact('absen', 'jumlahIzin'));
-  }
-
-  public function showmap(Request $request)
-  {
-    $id = $request->id;
-    $absen = Absen::where('id', $id)->first();
-
-    return view('absen.showmap', compact('absen'));
   }
 
   public function previewDataLaporan(Request $request)

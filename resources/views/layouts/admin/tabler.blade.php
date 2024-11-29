@@ -20,6 +20,9 @@
   <link href="{{asset('tabler/dist/css/demo.min.css?1692870487')}}" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.0/css/datepicker.css" rel="stylesheet" type="text/css" />
 
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" rel="stylesheet">
+
   <!-- Leaflet CSS and JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
@@ -28,10 +31,6 @@
   <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
   {{-- <link rel="stylesheet" href="{{asset('assets/css/style.css')}}" /> --}}
-
-  {{-- <script src="https://cdn.tailwindcss.com"></script> --}}
-
-
 
   <!-- Scripts -->
   {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
@@ -62,7 +61,6 @@
   </div>
 
 </body>
-<script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
 <!-- Libs JS -->
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
 <script src="{{asset('tabler/dist/libs/apexcharts/dist/apexcharts.min.js?1692870487')}}" defer></script>
@@ -83,6 +81,7 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script src="https://nominatim.openstreetmap.org/js/nominatim-v3.3.0.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
 @stack('myscript')
 </html>
