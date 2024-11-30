@@ -30,10 +30,25 @@
           <textarea id="laporan" name="laporan" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></textarea>
         </div>
       </div>
-      @if(auth()->user()->jabatan == 'SUPERADMIN' || auth()->user()->jabatan == 'PMR' && $quiz && !$quizAnswer)
+
+      @php
+      use Illuminate\Support\Str;
+
+      $formattedPertanyaan = Str::of($quiz->pertanyaan ?? '')->replaceMatches(
+      '/(https?:\/\/[^\s]+)/',
+      function ($match) {
+      $url = $match[0];
+      return '<a href="' . $url . '" target="_blank" class="text-blue-500 underline">ini</a>';
+      }
+      );
+      @endphp
+
+      @if((auth()->user()->jabatan == 'SUPERADMIN' || auth()->user()->jabatan == 'PMR') && $quiz && !empty($quiz->pertanyaan) && !$quizAnswer)
       <div class="grid grid-rows-1 px-3 pb-1">
         <label for="quiz" class="block text-sm font-medium leading-6 text-white">Quiz</label>
-        <textarea name="quiz" id="quiz" cols="30" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" readonly>{{ $quiz->pertanyaan }}</textarea>
+        <div class="block w-full px-3 py-2 text-white bg-gray-800 border border-gray-600 rounded-md shadow-sm sm:text-sm sm:leading-6">
+          {!! $formattedPertanyaan !!}
+        </div>
       </div>
       <div class="grid grid-rows-1 px-3 pb-1">
         <label for="jawaban" class="block text-sm font-medium leading-6 text-white">Jawaban</label>
@@ -41,6 +56,7 @@
         <input type="file" class="form-control" name="quizFile" id="quizFile">
       </div>
       @endif
+
       <div class="grid grid-rows-1 px-3 pb-1">
         <div class="" id="map"></div>
       </div>
@@ -139,9 +155,9 @@
 
     var lokasi = $("#lokasi").val();
     var laporan = $("#laporan").val();
-    var quiz = $("#quiz").val();
-    var jawaban = $("#jawaban").val();
-    var quizFile = $("#quizFile")[0].files[0];
+    var quiz = $("#quiz").length ? $("#quiz").val() : null;
+    var jawaban = $("#jawaban").length ? $("#jawaban").val() : null;
+    var quizFile = $("#quizFile").length && $("#quizFile")[0].files.length > 0 ? $("#quizFile")[0].files[0] : null;
 
     if (laporan == "") {
       Swal.fire({
@@ -160,8 +176,12 @@
     formData.append('lokasi', lokasi);
     formData.append('laporan', laporan);
     formData.append('jenis_absen', jenisAbsen);
-    formData.append('quiz', quiz);
-    formData.append('jawaban', jawaban);
+    if (quiz !== null) {
+      formData.append('quiz', quiz);
+    }
+    if (jawaban !== null) {
+      formData.append('jawaban', jawaban);
+    }
     if (quizFile) {
       formData.append('quizFile', quizFile); // Append the file
     }
@@ -205,9 +225,9 @@
 
     var lokasi = $("#lokasi").val();
     var laporan = $("#laporan").val();
-    var quiz = $("#quiz").val();
-    var jawaban = $("#jawaban").val();
-    var quizFile = $("#quizFile")[0].files[0];
+    var quiz = $("#quiz").length ? $("#quiz").val() : null;
+    var jawaban = $("#jawaban").length ? $("#jawaban").val() : null;
+    var quizFile = $("#quizFile").length && $("#quizFile")[0].files.length > 0 ? $("#quizFile")[0].files[0] : null;
 
     if (quiz) {
       if (!jawaban || !quizFile) {
@@ -238,8 +258,12 @@
     formData.append('lokasi', lokasi);
     formData.append('laporan', laporan);
     formData.append('jenis_absen', jenisAbsen);
-    formData.append('quiz', quiz);
-    formData.append('jawaban', jawaban);
+    if (quiz !== null) {
+      formData.append('quiz', quiz);
+    }
+    if (jawaban !== null) {
+      formData.append('jawaban', jawaban);
+    }
     if (quizFile) {
       formData.append('quizFile', quizFile); // Append the file
     }

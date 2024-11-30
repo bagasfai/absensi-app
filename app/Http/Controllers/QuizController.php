@@ -98,7 +98,7 @@ class QuizController extends Controller
                     $assignTo = array_merge($assignTo, $whUsers);
                 }
 
-                $assignTo = array_diff($assignTo, ['PMR', 'WH']);
+                $assignTo = array_diff($assignTo, ['pmr', 'wh']);
                 // reindex the array so its stored as an array not object when using json_encode
                 $assignTo = array_values($assignTo);
 

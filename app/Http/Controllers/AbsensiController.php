@@ -67,7 +67,7 @@ class AbsensiController extends Controller
     $quiz = null;
     $quizAnswer = null;
 
-    if (auth()->user()->jabatan == 'PMR' || auth()->user()->jabatan == 'WH') {
+    if (auth()->user()->jabatan == 'SUPERADMIN' || auth()->user()->jabatan == 'WH') {
       $today = now()->toDateString();
 
       // Find quizzes assigned to this user for today
@@ -110,6 +110,7 @@ class AbsensiController extends Controller
     $lokasi = $request->lokasi;
     $jam = date("H:i:s");
     $jenisAbsen = $request->jenis_absen;
+    $cuaca = $request->cuaca;
 
     if ($jenisAbsen == 'masuk') {
       $ket = 'masuk';
@@ -157,6 +158,7 @@ class AbsensiController extends Controller
           'lokasi_masuk' => $lokasi,
           'laporan_masuk' => $laporan,
           'user_id' => auth()->user()->id,
+          'cuaca' => $cuaca,
         ];
 
         $simpan = Absen::create($data);
@@ -183,6 +185,7 @@ class AbsensiController extends Controller
           'foto_keluar' => $fileName,
           'lokasi_keluar' => $lokasi,
           'laporan_keluar'   => $laporan,
+          'cuaca' => $cuaca,
         ];
 
         $update = Absen::where('email', $email)
@@ -892,6 +895,7 @@ class AbsensiController extends Controller
         "absens.tanggal",
         "absens.jam_masuk",
         "absens.jam_keluar",
+        "absens.cuaca",
         DB::raw("DAYNAME(absens.tanggal) AS hari"),
         DB::raw("DAY(absens.tanggal) AS date"),
         DB::raw('
@@ -915,6 +919,7 @@ class AbsensiController extends Controller
         "absens.tanggal",
         "absens.jam_masuk",
         "absens.jam_keluar",
+        "absens.cuaca",
         DB::raw("DAYNAME(absens.tanggal) AS hari"),
         DB::raw("DAY(absens.tanggal) AS date"),
         DB::raw('
@@ -939,6 +944,7 @@ class AbsensiController extends Controller
         "absens.tanggal",
         "absens.jam_masuk",
         "absens.jam_keluar",
+        "absens.cuaca",
         DB::raw("DAYNAME(absens.tanggal) AS hari"),
         DB::raw("DAY(absens.tanggal) AS date"),
         DB::raw('
@@ -965,6 +971,7 @@ class AbsensiController extends Controller
           "jabatan" => $item->jabatan,
           "nama" => $item->nama,
           "email" => $item->email,
+          "cuaca" => $item->cuaca,
           "total_hours_month" => 0,
           "total_minutes_month" => 0,
         ];
@@ -974,11 +981,13 @@ class AbsensiController extends Controller
 
           if ($today->englishDayOfWeek === "Sunday") {
             $result[$item->email]['tgl_' . $day] = "LIBUR";
+            $result[$item->email][$day . '_cuaca'] = null;
             $result[$item->email]['total_hours_' . $day] = 0;
             $result[$item->email]['total_minutes_' . $day] = 0;
             // $total_hours_month_raw += $result[$item->email]['total_hours_' . $day];
           } else {
             $result[$item->email]['tgl_' . $day] = null;
+            $result[$item->email][$day . '_cuaca'] = null;
             $result[$item->email]['total_hours_' . $day] = null;
             $result[$item->email]['total_minutes_' . $day] = null;
           }
@@ -986,6 +995,13 @@ class AbsensiController extends Controller
       }
 
       $total_hours_month_raw += $item['total_hours'];
+
+      $result[$item->email][$item->date . '_cuaca'] = match ($item->status) {
+        "H", "0" => $item->cuaca,
+        'I' => 'I',
+        'S' => 'S',
+        null => "A"
+      };
 
       $result[$item->email]['tgl_' . $item->date] = match ($item->status) {
         "H", "0" => "{$item->jam_masuk}-{$item->jam_keluar}",
