@@ -182,6 +182,16 @@ class AbsensiController extends Controller
         QuizAnswer::create($dataQuiz);
       }
 
+      $idTelegram = User::where('jabatan', 'SUPERADMIN')->pluck('id_telegram')->toArray();
+
+      $message = "Clock In: \n\nNama: $nama \nWaktu: $jam \nLokasi: $lokasi";
+
+      // Send the message using TelegramController
+      $telegramController = app(TelegramController::class);
+      foreach ($idTelegram as $chatId) {
+        $telegramController->sendMessage($chatId, $message);
+      }
+
       if ($simpan) {
         echo "success|Terimakasih, Selamat bekerja!|in";
         Storage::put($file, $image_base64);
