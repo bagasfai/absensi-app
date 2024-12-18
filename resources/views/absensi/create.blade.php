@@ -30,7 +30,6 @@
           <textarea id="laporan" name="laporan" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></textarea>
         </div>
       </div>
-
       @php
       use Illuminate\Support\Str;
 
@@ -43,12 +42,14 @@
       );
       @endphp
 
-      @if((auth()->user()->jabatan == 'SUPERADMIN' || auth()->user()->jabatan == 'PMR') && $quiz && !empty($quiz->pertanyaan) && !$quizAnswer)
+      @if((auth()->user()->jabatan == 'WH' || auth()->user()->jabatan == 'PMR') && $quiz && !empty($quiz->pertanyaan) && !$quizAnswer)
       <div class="grid grid-rows-1 px-3 pb-1">
         <label for="quiz" class="block text-sm font-medium leading-6 text-white">Quiz</label>
         <div class="block w-full px-3 py-2 text-white bg-gray-800 border border-gray-600 rounded-md shadow-sm sm:text-sm sm:leading-6">
           {!! $formattedPertanyaan !!}
         </div>
+
+        <input type="hidden" value="{{ $quiz->id }}" name="quiz" id="quiz">
       </div>
       <div class="grid grid-rows-1 px-3 pb-1">
         <label for="jawaban" class="block text-sm font-medium leading-6 text-white">Jawaban</label>
@@ -56,22 +57,41 @@
         <input type="file" class="form-control" name="quizFile" id="quizFile">
       </div>
       @endif
-
       <div class="grid grid-rows-1 px-3 pb-1">
         <div class="" id="map"></div>
       </div>
       <div class="grid grid-rows-1 px-3" style="padding-bottom: 100px;">
         @if($cek)
-        <button id="takeAbsenKeluar" onclick="submitAbsen('Keluar')" class="px-4 py-2 pb-10 font-bold text-center text-white bg-red-500 rounded hover:bg-red-700">
+        <div class="pb-4">
+          @if(auth()->user()->jabatan === 'PMR' || auth()->user()->jabatan === 'TEAM WAGNER')
+          <label for="cuaca" class="mt-1 block text-[15px] font-medium leading-6 text-white">
+            Bagaimana Cuaca Hari Ini?
+          </label>
+          <select id="cuaca" name="cuaca" required class="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-400 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
+            <option value="" disabled selected>-- Pilih --</option>
+            <option value="Panas">Panas</option>
+            <option value="Berawan">Berawan</option>
+            <option value="Berangin">Berangin</option>
+            <option value="Hujan">Hujan</option>
+          </select>
+        </div>
+        @endif
+        @if($selisihWaktu < 15) <button id="takeAbsenKeluar" onclick="submitAbsen('Keluar')" class="px-4 py-2 pb-10 font-bold text-center text-white bg-red-500 rounded hover:bg-red-700">
           <ion-icon name="camera-outline" class="text-center"></ion-icon>
           Absen Keluar
-        </button>
-        @else
-        <button id="takeAbsenMasuk" onclick="submitAbsen('Masuk')" class="px-4 py-2 pb-10 font-bold text-center text-white rounded bg-cyan-500 hover:bg-cyan-700">
-          <ion-icon name="camera-outline" class="text-center"></ion-icon>
-          Absen Masuk
-        </button>
-        @endif
+          </button>
+          @else
+          <button id="takeAbsenMasuk" onclick="submitAbsen('Masuk')" class="px-4 py-2 pb-10 font-bold text-center text-white rounded bg-cyan-500 hover:bg-cyan-700">
+            <ion-icon name="camera-outline" class="text-center"></ion-icon>
+            Absen Masuk
+          </button>
+          @endif
+          @else
+          <button id="takeAbsenMasuk" onclick="submitAbsen('Masuk')" class="px-4 py-2 pb-10 font-bold text-center text-white rounded bg-cyan-500 hover:bg-cyan-700">
+            <ion-icon name="camera-outline" class="text-center"></ion-icon>
+            Absen Masuk
+          </button>
+          @endif
       </div>
     </div>
   </div>
@@ -147,7 +167,6 @@
 
   $("#takeAbsenMasuk").click(function(e) {
     e.preventDefault();
-
     const jenisAbsen = 'masuk';
     Webcam.snap(function(uri) {
       image = uri;
@@ -224,18 +243,21 @@
     });
 
     var lokasi = $("#lokasi").val();
+    console.log(lokasi);
     var laporan = $("#laporan").val();
+    var cuaca = $("#cuaca").val();
     var quiz = $("#quiz").length ? $("#quiz").val() : null;
     var jawaban = $("#jawaban").length ? $("#jawaban").val() : null;
     var quizFile = $("#quizFile").length && $("#quizFile")[0].files.length > 0 ? $("#quizFile")[0].files[0] : null;
 
     if (quiz) {
-      if (!jawaban || !quizFile) {
+      if (!jawaban && !quizFile) {
         Swal.fire({
           icon: "warning"
           , title: "Jawaban harus diisi"
           , text: "Harap mengisi jawaban atau upload foto untuk pertanyaan yang diberikan."
           , confirmButtonText: "OK"
+          , timer: 1500
         });
 
         return false;
@@ -258,6 +280,7 @@
     formData.append('lokasi', lokasi);
     formData.append('laporan', laporan);
     formData.append('jenis_absen', jenisAbsen);
+    formData.append('cuaca', cuaca);
     if (quiz !== null) {
       formData.append('quiz', quiz);
     }

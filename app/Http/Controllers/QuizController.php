@@ -94,7 +94,7 @@ class QuizController extends Controller
                 }
 
                 if (in_array('wh', $assignTo)) {
-                    $whUsers = User::where('roles', 'WH')->pluck('id')->toArray();
+                    $whUsers = User::where('jabatan', 'WH')->pluck('id')->toArray();
                     $assignTo = array_merge($assignTo, $whUsers);
                 }
 
@@ -103,7 +103,6 @@ class QuizController extends Controller
                 $assignTo = array_values($assignTo);
 
                 $assignTo = array_unique($assignTo);
-
                 unset($validatedData['assignTo']);
                 $data = array_merge($validatedData, [
                     'assign_to' => json_encode($assignTo),
