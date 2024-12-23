@@ -8,6 +8,7 @@ use App\Models\Absen;
 use App\Models\User;
 use App\Models\Jabatan;
 use App\Models\Pengajuan_Izin;
+use App\Models\PengajuanCuti;
 use Symfony\Component\VarDumper\Caster\RedisCaster;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
@@ -20,9 +21,7 @@ class UserController extends Controller
 	{
 		$jabatan = Jabatan::all();
 
-		if (auth()->user()->jabatan == 'TEAM WAGNER') {
-			$user = User::whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->get();
-		} else if (auth()->user()->jabatan == 'ADMIN') {
+		if (auth()->user()->jabatan == 'ADMIN') {
 			$user = User::where('jabatan', 'KORLAP')->orderBy('nama')->get();
 		} else {
 			$user = User::orderBy('nama')->get();
@@ -33,6 +32,8 @@ class UserController extends Controller
 		} else {
 			$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
 		}
+
+		$jumlahCuti = PengajuanCuti::where('status', 0)->count();
 
 		$email = auth()->user()->email;
 		$hariini = date("Y-m-d");
@@ -74,7 +75,7 @@ class UserController extends Controller
 		}
 
 		$cek = Absen::where('email', $email)->orderBy('id', 'desc')->first();
-		return view('user.index', compact('user', 'jabatan', 'selisihWaktuOut', 'jumlahIzin'));
+		return view('user.index', compact('user', 'jabatan', 'selisihWaktuOut', 'jumlahIzin', 'jumlahCuti'));
 	}
 
 	public function store(Request $request)
@@ -122,12 +123,17 @@ class UserController extends Controller
 
 	public function update($email, Request $request)
 	{
+
 		$nama = $request->nama;
 		$jabatan = $request->jabatan;
 		$email = $request->email;
 		$password = $request->password;
 		$old_foto = $request->old_foto;
 		$id_telegram = $request->telegram;
+		$tanggal_masuk_kerja = $request->tanggal_masuk_kerja;
+		$is_active = $request->is_active;
+		$tanggal_dinonaktifkan = $request->tanggal_dinonaktifkan;
+		$alasan_dinonaktifkan = $request->alasan_dinonaktifkan;
 
 		if ($request->hasFile('foto')) {
 			$foto = $email . "." . $request->file('foto')->getClientOriginalExtension();
@@ -141,7 +147,11 @@ class UserController extends Controller
 				'jabatan' => $jabatan,
 				'email' => $email,
 				'foto' => $foto,
-				'id_telegram' => $id_telegram
+				'id_telegram' => $id_telegram,
+				'tanggal_masuk_kerja' => $tanggal_masuk_kerja,
+				'is_active' => $is_active,
+				'tanggal_dinonaktifkan' => $tanggal_dinonaktifkan,
+				'alasan_dinonaktifkan' => $alasan_dinonaktifkan,
 			];
 
 			// Hash the password if it's not empty

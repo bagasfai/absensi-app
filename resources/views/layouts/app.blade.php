@@ -38,7 +38,7 @@
     <!-- Page Heading -->
     @if (isset($header))
     <header class="bg-gray-800 shadow">
-      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div class="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
         {{ $header }}
       </div>
     </header>
@@ -54,16 +54,22 @@
 
     <!-- App Bottom Menu -->
     <div class="appBottomMenu">
-      <a href="{{route('absen.dashboard')}}" class="item {{request()->is('dashboard') ? 'active' : ''}}">
-        <div class="col">
-          <ion-icon name="home-outline"></ion-icon>
-          <strong>Home</strong>
-        </div>
-      </a>
+      {{-- <a href="{{route('absen.dashboard')}}" class="item {{request()->is('dashboard') ? 'active' : ''}}">
+      <div class="col">
+        <ion-icon name="home-outline"></ion-icon>
+        <strong>Home</strong>
+      </div>
+      </a> --}}
       <a href="{{route('absen.histori')}}" class="item {{request()->is('absen/histori') ? 'active' : ''}}">
         <div class="col">
           <ion-icon name="document-text-outline" class="md hydrated" aria-label="histori outline"></ion-icon>
           <strong>Histori</strong>
+        </div>
+      </a>
+      <a href="{{route('cuti.index')}}" class="item {{request()->is('cuti/index') ? 'active' : ''}}">
+        <div class="col">
+          <ion-icon name="calendar-number-outline" class="md hydrated" aria-label="histori outline"></ion-icon>
+          <strong>Cuti</strong>
         </div>
       </a>
       @if(isset($cek) && is_object($cek) && $cek->jam_keluar !== null && $selisihWaktuOut < 2) <!-- Content when $cek->jam_keluar is not null -->

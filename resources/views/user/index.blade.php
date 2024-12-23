@@ -16,18 +16,18 @@
 <div class="page-body">
   <div class="container-xl">
     <div class="w-full ">
-      <div class="mx-auto overflow-hidden rounded-md shadow-md">
+      <div class="mx-auto overflow-hidden bg-white rounded-md shadow-md">
         <div class="row">
           <div class="col-12">
             @if (Session::get('success'))
             <div class="alert alert-success">
-              {{Session::get('success')}}
+              {{ Session::get('success') }}
             </div>
             @endif
 
-            @if(Session::get('warning'))
+            @if (Session::get('warning'))
             <div class="alert alert-warning">
-              {{Session::get('warning')}}
+              {{ Session::get('warning') }}
             </div>
             @endif
           </div>
@@ -37,12 +37,13 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <path d="M12 5l0 14" />
-              <path d="M5 12l14 0" /></svg>
+              <path d="M5 12l14 0" />
+            </svg>
             Tambah Data
           </a>
         </div>
         <div class="p-4">
-          <form action="{{route('user.index')}}" method="GET">
+          <form action="{{ route('user.index') }}" method="GET">
           </form>
           <table class="w-full mb-2 border border-gray-800 rounded" id="dataTable">
             <thead>
@@ -52,6 +53,10 @@
                 <th class="px-4 py-2 text-center bg-gray-800 border">Email</th>
                 <th class="px-4 py-2 text-center bg-gray-800 border">Jabatan</th>
                 <th class="px-4 py-2 text-center bg-gray-800 border">Foto</th>
+                <th class="px-4 py-2 text-center bg-gray-800 border">Tanggal Masuk Kerja</th>
+                <th class="px-4 py-2 text-center bg-gray-800 border">Status Akun</th>
+                <th class="px-4 py-2 text-center bg-gray-800 border">Tanggal Penonaktifan</th>
+                <th class="px-4 py-2 text-center bg-gray-800 border">Alasan Penonaktifan</th>
                 <th class="px-4 py-2 text-center bg-gray-800 border">Aksi</th>
               </tr>
             </thead>
@@ -64,29 +69,38 @@
               $path = Storage::url('uploads/karyawan/' . $u->foto);
               @endphp
               <tr>
-                <td class="text-center border">{{$no++}}</td>
-                <td class="px-2 border">{{$u->nama}}</td>
-                <td class="px-2 border">{{$u->email}}</td>
-                <td class="text-center border">{{$u->jabatan}}</td>
+                <td class="text-center border">{{ $no++ }}</td>
+                <td class="px-2 border">{{ $u->nama }}</td>
+                <td class="px-2 border">{{ $u->email }}</td>
+                <td class="text-center border">{{ $u->jabatan }}</td>
                 <td class="text-center border">
-                  @if(empty($u->foto))
+                  @if (empty($u->foto))
                   {{-- <img src="https://mysds.satriadigitalsejahtera.co.id/assets/files/assets/images/logo.png" class="avatar" alt="Foto User"> --}}
-                  {{-- <img src="{{asset('assets/img/web-logo.png')}}" class="avatar" alt="Foto User"> --}}
-                  {{-- <img src="{{asset('assets/img/app-logo.jpg')}}" class="avatar" alt="Foto User"> --}}
-                  <img src="{{asset('assets/img/blm.jpg')}}" class="avatar" alt="Foto User">
+                  <img src="{{ asset('assets/img/web-logo.png') }}" class="avatar" alt="Foto User">
                   @else
-                  <img src="{{url($path)}}" class="avatar" alt="Foto User">
+                  <img src="{{ url($path) }}" class="avatar" alt="Foto User">
                   @endif
                 </td>
+                <td class="text-center border">{{$u->tanggal_masuk_kerja}}</td>
+                <td class="text-center border">
+                  @if ($u->is_active == 1)
+                  Aktif
+                  @else
+                  Tidak Aktif
+                  @endif
+                </td>
+                <td class="text-center border">{{ $u->tanggal_dinonaktifkan }}</td>
+                <td class="text-center border">{{ $u->alasan_dinonaktifkan }}</td>
                 <td class="border">
                   <div class="btn-group">
-                    <a href="#" class="edit btn btn-info btn-sm" email="{{$u->email}}">
+                    <a href="#" class="edit btn btn-info btn-sm" email="{{ $u->email }}">
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
                         <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                        <path d="M16 5l3 3" /></svg></a>
-                    <form action="{{route('user.delete', ['email' => $u->email])}}" method="POST" style="margin-left: 5px;">
+                        <path d="M16 5l3 3" />
+                      </svg></a>
+                    <form action="{{ route('user.delete', ['email' => $u->email]) }}" method="POST" style="margin-left: 5px;">
                       @csrf
                       <a class="btn btn-danger btn-sm delete-confirm"><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -94,7 +108,8 @@
                           <path d="M10 11l0 6" />
                           <path d="M14 11l0 6" />
                           <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                          <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg></a>
+                          <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                        </svg></a>
                     </form>
                   </div>
                 </td>
@@ -117,7 +132,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="{{route('user.store')}}" method="post" id="form-input" enctype="multipart/form-data">
+        <form action="{{ route('user.store') }}" method="post" id="form-input" enctype="multipart/form-data">
           @csrf
 
           <div class="row">
@@ -142,7 +157,7 @@
                 <select class="form-select" fdprocessedid="ukk3eh" name="jabatan" id="jabatan">
                   <option value="">Jabatan</option>
                   @foreach ($jabatan as $j)
-                  <option value="{{$j->jabatan}}">{{$j->jabatan}}</option>
+                  <option value="{{ $j->jabatan }}">{{ $j->jabatan }}</option>
                   @endforeach
                 </select>
               </div>
@@ -157,7 +172,8 @@
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-mail" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z" />
-                    <path d="M3 7l9 6l9 -6" /></svg>
+                    <path d="M3 7l9 6l9 -6" />
+                  </svg>
                 </span>
                 <input type="email" name="email" id="email" value="" class="form-control" placeholder="Email" fdprocessedid="9ar8xn">
               </div>
@@ -170,7 +186,8 @@
                 <span class="input-icon-addon">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-telegram" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" /></svg>
+                    <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" />
+                  </svg>
                 </span>
                 <input type="number" nama="id_telegram" id="id_telegram" class="form-control" placeholder="ID Telegram" fdprocessedid="9ar8xn">
               </div>
@@ -212,7 +229,6 @@
     </div>
   </div>
 </div>
-
 @endsection
 
 @push('myscript')
@@ -232,10 +248,10 @@
       console.log(email);
       $.ajax({
         type: 'POST'
-        , url: "{{route('user.edit')}}"
+        , url: "{{ route('user.edit') }}"
         , cache: false
         , data: {
-          _token: "{{ csrf_token(); }}"
+          _token: "{{ csrf_token() }}"
           , email: email
         }
         , success: function(respond) {

@@ -60,12 +60,22 @@
           </div>
           <div class="text-center item-menu">
             <div class="menu-icon">
-              <a href="{{route('absen.izin')}}" class="danger" style="font-size: 40px">
+              <a href="{{route('cuti.index')}}" class="danger" style="font-size: 40px">
                 <ion-icon name="calendar-number"></ion-icon>
               </a>
             </div>
             <div class="menu-name">
               <span class="text-center">Cuti</span>
+            </div>
+          </div>
+          <div class="text-center item-menu">
+            <div class="menu-icon">
+              <a href="{{route('absen.izin')}}" class="danger" style="font-size: 40px">
+                <ion-icon name="calendar"></ion-icon>
+              </a>
+            </div>
+            <div class="menu-name">
+              <span class="text-center">Izin</span>
             </div>
           </div>
           <div class="text-center item-menu">
@@ -129,41 +139,6 @@
       </div>
     </div>
 
-    @if($quiz && auth()->user()->jabatan == "PMR" || auth()->user()->jabatan == "WH")
-    <div class="mb-4 shadow-sm card">
-      <div class="text-white card-header bg-primary">
-        <h5 class="mb-0 text-white">Quiz Hari Ini</h5>
-      </div>
-      <div class="card-body">
-        <!-- Quiz Question -->
-        <h6 class="card-title text-muted">Pertanyaan:</h6>
-        <p class="card-text">{{ $quiz->pertanyaan }}</p>
-
-        @if($quizAnswer)
-        <!-- User's Answer -->
-        <hr>
-        <h6 class="card-title text-muted">Jawabanmu:</h6>
-        <p class="card-text">{{ $quizAnswer->jawaban }}</p>
-
-        <!-- Calculate Remaining Edit Time -->
-        @php
-        $canEdit = now()->diffInMinutes($quizAnswer->created_at) <= $quiz->durasi_edit;
-          @endphp
-
-          @if($canEdit && $quizAnswer->is_edit != 1)
-          <a href="{{ route('quiz.edit_jawaban', ['id' => $quizAnswer->id]) }}" class="w-full btn btn-warning">Edit Jawaban</a>
-          @endif
-
-          @if(session('success'))
-          <div class="mt-1 text-center alert alert-success fade show" role="alert">
-            {{ session('success') }}
-          </div>
-          @endif
-          @endif
-      </div>
-    </div>
-    @endif
-
     <div class="" id="rekap-absen">
       <h3>Rekap Absen Bulan {{ $namaBulan[$bulan] }} Tahun {{ $tahun }}</h3>
       <div class="grid max-w-screen-lg grid-cols-3 gap-2 mx-auto">
@@ -185,6 +160,12 @@
           <ion-icon name="medkit-outline" class="text-2xl text-center text-yellow-500 bg-transparent border-transparent"></ion-icon>
           <span class="text-xs">Sakit</span>
         </div>
+
+        {{-- <div class="relative flex flex-col items-center justify-center h-16 max-w-sm py-1 overflow-hidden bg-white rounded shadow-lg">
+          <small class="absolute top-1 right-4 badge badge-danger">0</small>
+          <ion-icon name="alarm-outline" class="text-2xl text-center text-red-500 bg-transparent border-transparent"></ion-icon>
+          <span class="text-xs">Alpha</span>
+        </div> --}}
       </div>
     </div>
 

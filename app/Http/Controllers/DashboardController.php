@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon;
 use App\Models\Absen;
 use App\Models\User;
 use App\Models\Pengajuan_Izin;
+use App\Models\PengajuanCuti;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use Illuminate\Support\Facades\Storage;
@@ -152,6 +153,8 @@ class DashboardController extends Controller
 			$jumlahIzin = Pengajuan_Izin::select('*')->where('status_approved', 0)->count();
 		}
 
+		$jumlahCuti = PengajuanCuti::where('status', 0)->count();
+
 		$rekapAbsen = Absen::selectRaw('COUNT(email) AS jumlah_hadir')
 			->where('tanggal', $hariini)
 			->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
@@ -167,6 +170,6 @@ class DashboardController extends Controller
 			->whereRaw('YEAR(tanggal_izin) = ?', [$tahun])
 			->first();
 
-		return view('dashboardadmin', compact('rekapAbsen', 'rekapIzin', 'user', 'jumlahIzin'));
+		return view('dashboardadmin', compact('rekapAbsen', 'rekapIzin', 'user', 'jumlahIzin', 'jumlahCuti'));
 	}
 }

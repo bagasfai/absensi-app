@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Models\Absen;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\CutiController;
 use App\Http\Controllers\QuizController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +55,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/absen/izinsakit/{id}/batalapprove', [AbsensiController::class, 'batalapprove'])->name('absen.batalapprove');
     Route::post('/absen/cekizin', [AbsensiController::class, 'cekizin'])->name('absen.cekizin');
 
+    // cuti
+    Route::get('/cuti', [CutiController::class, 'index'])->name('cuti.index');
+    Route::get('/cuti/create', [CutiController::class, 'create'])->name('cuti.create');
+    Route::post('/cuti/store', [CutiController::class, 'store'])->name('cuti.store');
 
     // absensi
     Route::get('/absen/monitor', [AbsensiController::class, 'monitor'])->name('absen.monitor');
@@ -99,6 +104,10 @@ Route::middleware('auth', 'jabatan:SUPERADMIN,TEAM WAGNER,ADMIN')->group(functio
     Route::post('/user/edit', [UserController::class, 'edit'])->name('user.edit');
     Route::post('/user/{email}/update', [UserController::class, 'update'])->name('user.update');
     Route::post('/user/{email}/delete', [UserController::class, 'delete'])->name('user.delete');
+
+    Route::get('/cuti/approval', [CutiController::class, 'indexApproval'])->name('cuti.approval');
+    Route::post('/cuti/approval/action', [CutiController::class, 'action'])->name('cuti.action');
+    Route::get('cuti/approval/{id}/batal-approve', [CutiController::class, 'batalApprove'])->name('cuti.batalApprove');
 });
 
 
