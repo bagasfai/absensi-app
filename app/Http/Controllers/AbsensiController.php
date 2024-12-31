@@ -83,19 +83,17 @@ class AbsensiController extends Controller
     $quiz = null;
     $quizAnswer = null;
 
-    if (auth()->user()->jabatan == 'PMR' || auth()->user()->jabatan == 'WH') {
-      $today = now()->toDateString();
+    $today = now()->toDateString();
 
-      // Find quizzes assigned to this user for today
-      $quiz = Quiz::whereDate('jadwal', $today)
-        ->whereJsonContains('assign_to', auth()->user()->id)
+    // Find quizzes assigned to this user for today
+    $quiz = Quiz::whereDate('jadwal', $today)
+      ->whereJsonContains('assign_to', auth()->user()->id)
+      ->first();
+
+    if ($quiz) {
+      $quizAnswer = QuizAnswer::where('quiz_id', $quiz->id)
+        ->where('user_id', auth()->user()->id)
         ->first();
-
-      if ($quiz) {
-        $quizAnswer = QuizAnswer::where('quiz_id', $quiz->id)
-          ->where('user_id', auth()->user()->id)
-          ->first();
-      }
     }
 
     $currentDateTime = now();
@@ -160,6 +158,8 @@ class AbsensiController extends Controller
       }
     }
 
+    $idTelegram = User::where('jabatan', 'SUPERADMIN')->pluck('id_telegram')->toArray();
+
     if ($jenisAbsen == 'masuk') {
       // insert absen
       $data = [
@@ -171,7 +171,7 @@ class AbsensiController extends Controller
         'foto_masuk' => $fileName,
         'lokasi_masuk' => $lokasi,
         'laporan_masuk' => $laporan,
-        'cuaca' => $cuaca,
+        // 'cuaca' => $cuaca,
       ];
 
       $simpan = Absen::create($data);
@@ -184,10 +184,7 @@ class AbsensiController extends Controller
         QuizAnswer::create($dataQuiz);
       }
 
-      $idTelegram = User::where('jabatan', 'SUPERADMIN')->pluck('id_telegram')->toArray();
-
       $message = "Clock In: \n\nNama: $nama \nWaktu: $jam \nLokasi: $lokasi";
-
       // Send the message using TelegramController
       $telegramController = app(TelegramController::class);
       foreach ($idTelegram as $chatId) {
@@ -208,7 +205,7 @@ class AbsensiController extends Controller
         'foto_keluar' => $fileName,
         'lokasi_keluar' => $lokasi,
         'laporan_keluar'   => $laporan,
-        'cuaca' => $cuaca,
+        // 'cuaca' => $cuaca,
       ];
 
       $update = Absen::where('email', $email)
@@ -225,6 +222,13 @@ class AbsensiController extends Controller
 
       if (isset($dataQuiz)) {
         QuizAnswer::create($dataQuiz);
+      }
+
+      $message = "Clock Out: \n\nNama: $nama \nWaktu: $jam \nLokasi: $lokasi";
+      // Send the message using TelegramController
+      $telegramController = app(TelegramController::class);
+      foreach ($idTelegram as $chatId) {
+        $telegramController->sendMessage($chatId, $message);
       }
 
       if ($updateKeluar) {

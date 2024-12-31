@@ -42,7 +42,7 @@
       );
       @endphp
 
-      @if((auth()->user()->jabatan == 'WH' || auth()->user()->jabatan == 'PMR') && $quiz && !empty($quiz->pertanyaan) && !$quizAnswer)
+      @if($quiz && !empty($quiz->pertanyaan) && !$quizAnswer)
       <div class="grid grid-rows-1 px-3 pb-1">
         <label for="quiz" class="block text-sm font-medium leading-6 text-white">Quiz</label>
         <div class="block w-full px-3 py-2 text-white bg-gray-800 border border-gray-600 rounded-md shadow-sm sm:text-sm sm:leading-6">

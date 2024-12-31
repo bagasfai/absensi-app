@@ -71,8 +71,9 @@
                             <option value="">Pilih</option>
 
                             <optgroup label="ROLES" class="fw-bold text-uppercase text-primary">
-                              <option value="pmr">PMR</option>
-                              <option value="wh">WAREHOUSE</option>
+                              @foreach ($roles as $role)
+                              <option value="{{ strtolower($role) }}">{{ $role }}</option>
+                              @endforeach
                             </optgroup>
 
                             @if(isset($users))

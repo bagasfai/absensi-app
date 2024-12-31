@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Absen;
 use App\Models\Pengajuan_Izin;
+use App\Models\PengajuanCuti;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\User;
@@ -26,9 +27,10 @@ class QuizController extends Controller
             $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
         }
 
+        $jumlahCuti = PengajuanCuti::where('status', 0)->count();
         $quiz = Quiz::get();
 
-        return view('quiz.index', compact('jumlahIzin', 'quiz'));
+        return view('quiz.index', compact('jumlahIzin', 'quiz', 'jumlahCuti'));
     }
 
     function laporan()
@@ -42,13 +44,15 @@ class QuizController extends Controller
         }
 
         $quiz = QuizAnswer::get();
+        $jumlahCuti = PengajuanCuti::where('status', 0)->count();
 
-        return view('quiz.laporan', compact('jumlahIzin', 'quiz'));
+        return view('quiz.laporan', compact('jumlahIzin', 'jumlahCuti', 'quiz'));
     }
 
     public function create()
     {
-        $users = User::whereIn('jabatan', ['PMR', 'WH'])->get();
+        $users = User::all();
+        $roles = User::groupBy('jabatan')->pluck('jabatan');
 
         if (auth()->user()->jabatan == 'TEAM WAGNER') {
             $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
@@ -57,8 +61,9 @@ class QuizController extends Controller
         } else {
             $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
         }
+        $jumlahCuti = PengajuanCuti::where('status', 0)->count();
 
-        return view('quiz.create', compact('jumlahIzin', 'users'));
+        return view('quiz.create', compact('jumlahIzin', 'jumlahCuti', 'users', 'roles'));
     }
 
     public function store(Request $request)
@@ -88,21 +93,24 @@ class QuizController extends Controller
             DB::transaction(function () use ($validatedData) {
                 $assignTo = $validatedData['assignTo'] ?? [];
 
-                if (in_array('pmr', $assignTo)) {
-                    $pmrUsers = User::where('jabatan', 'PMR')->pluck('id')->toArray();
-                    $assignTo = array_merge($assignTo, $pmrUsers);
+                $jabatanMapping = [
+                    'office' => 'OFFICE',
+                    'security' => 'SECURITY',
+                    'pmr' => 'PMR',
+                    'superadmin' => 'SUPERADMIN',
+                    'wh' => 'WH',
+                ];
+
+                foreach ($jabatanMapping as $key => $jabatan) {
+                    if (in_array($key, $assignTo)) {
+                        $users = User::where('jabatan', $jabatan)->pluck('id')->toArray();
+                        $assignTo = array_merge($assignTo, $users);
+                    }
                 }
 
-                if (in_array('wh', $assignTo)) {
-                    $whUsers = User::where('jabatan', 'WH')->pluck('id')->toArray();
-                    $assignTo = array_merge($assignTo, $whUsers);
-                }
+                $assignTo = array_diff($assignTo, array_keys($jabatanMapping));
+                $assignTo = array_values(array_unique($assignTo));
 
-                $assignTo = array_diff($assignTo, ['pmr', 'wh']);
-                // reindex the array so its stored as an array not object when using json_encode
-                $assignTo = array_values($assignTo);
-
-                $assignTo = array_unique($assignTo);
                 unset($validatedData['assignTo']);
                 $data = array_merge($validatedData, [
                     'assign_to' => json_encode($assignTo),
@@ -131,8 +139,9 @@ class QuizController extends Controller
         } else {
             $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->count();
         }
+        $jumlahCuti = PengajuanCuti::where('status', 0)->count();
 
-        return view('quiz.edit', compact('jumlahIzin', 'quiz', 'users', 'assignTo'));
+        return view('quiz.edit', compact('jumlahIzin', 'jumlahCuti', 'quiz', 'users', 'assignTo'));
     }
 
     public function update($id, Request $request)
