@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\QuizAnswerExport;
 use App\Models\Absen;
 use App\Models\Pengajuan_Izin;
 use App\Models\PengajuanCuti;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use JsonException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class QuizController extends Controller
 {
@@ -33,7 +35,7 @@ class QuizController extends Controller
         return view('quiz.index', compact('jumlahIzin', 'quiz', 'jumlahCuti'));
     }
 
-    function laporan()
+    public function laporan()
     {
         if (auth()->user()->jabatan == 'TEAM WAGNER') {
             $jumlahIzin = Pengajuan_Izin::where('status_approved', 0)->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])->count();
@@ -129,7 +131,7 @@ class QuizController extends Controller
     public function edit($id, Request $request)
     {
         $quiz = Quiz::where('id', $id)->first();
-        $users = User::whereIn('jabatan', ['PMR', 'WH'])->get();
+        $users = User::all();
         $assignTo = json_decode($quiz->assign_to, true);
 
         if (auth()->user()->jabatan == 'TEAM WAGNER') {
@@ -343,5 +345,11 @@ class QuizController extends Controller
         }
 
         return response()->json(['message' => 'No quiz available for today.'], 404);
+    }
+
+    public function export(Request $request)
+    {
+        $tanggal = $request->query('tanggal');
+        return Excel::download(new QuizAnswerExport($tanggal), 'QuizAnswer_'  . $tanggal . '.xlsx');
     }
 }

@@ -73,12 +73,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/absen/laporan/preview-rekap', [AbsensiController::class, 'previewDataRekap'])->name('absen.previewrekap');
     Route::post('/setperiode', [AbsensiController::class, 'setPeriode'])->name('absen.setPeriode');
 
+    // profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // quiz
     Route::get('/quiz', [QuizController::class, 'index'])->name('quiz.index');
     Route::get('/quiz/laporan', [QuizController::class, 'laporan'])->name('quiz.laporan');
+    Route::get('/quiz/laporan/export', [QuizController::class, 'export'])->name('quiz.laporan_export');
     Route::get('/quiz/create', [QuizController::class, 'create'])->name('quiz.create');
     Route::get('/quiz/edit/{id}', [QuizController::class, 'edit'])->name('quiz.edit');
     Route::post('/quiz/update/{id}', [QuizController::class, 'update'])->name('quiz.update');
