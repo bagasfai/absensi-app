@@ -21,8 +21,8 @@
             <div class="card-body">
 
               <div class="row">
-                <div class="col-12">
-                  <div class="mb-3 input-icon">
+                <div class="col-12 d-flex">
+                  <div class="mb-3 input-icon w-100">
                     <span class="input-icon-addon">
                       <!-- Download SVG icon from http://tabler-icons.io/i/user -->
                       <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-month" width="24" height="24"
@@ -44,6 +44,14 @@
                     <input type="text" value="{{ date('Y-m-d') }}" name="tanggal" id="tanggal" class="form-control" placeholder="Tanggal Absensi"
                       autocomplete="off">
                   </div>
+                  <button type="button" id="exportExcelButton" class="btn btn-success" style="margin-left: 16px; height: 40px;" name="exportExcel"
+                    onclick="exportExcelFunc()"><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24"
+                      height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                      <path d="M7 11l5 5l5 -5" />
+                      <path d="M12 4l0 12" />
+                    </svg>Export Data Jawaban Quiz Bulan Ini</button>
                 </div>
               </div>
               <div class="row">
@@ -111,16 +119,12 @@
 
     function exportExcelFunc() {
       var tanggal = $('#tanggal').val();
+      console.log(tanggal)
       window.location.href = "{{ route('quiz.laporan_export') }}?tanggal=" + tanggal;
     }
 
     function loadquiz() {
       var tanggal = $('#tanggal').val();
-      var buttonExportExcel = `<button type="button" id="exportExcelButton" class="btn btn-success" style="margin-left: 16px; font-size: 12px; height: 32px;" name="exportExcel" onclick="exportExcelFunc()"><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
-                                <path d="M7 11l5 5l5 -5" />
-                                <path d="M12 4l0 12" /></svg>Export to Excel</button>`;
 
       $.ajax({
         type: 'POST',
@@ -162,12 +166,6 @@
                   '</button>';
               }
             }, ],
-            "initComplete": function() {
-              $("#dataTable_filter").append(buttonExportExcel);
-              if (data.quiz.length === 0) {
-                $('#exportExcelButton').attr('disabled', true);
-              }
-            }
           });
         }
       })

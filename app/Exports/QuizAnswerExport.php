@@ -6,6 +6,7 @@ use App\Models\QuizAnswer;
 use Illuminate\Support\Facades\URL;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Carbon\Carbon;
 
 class QuizAnswerExport implements FromCollection, WithHeadings
 {
@@ -22,24 +23,35 @@ class QuizAnswerExport implements FromCollection, WithHeadings
 
     public function collection()
     {
-        return QuizAnswer::with('user')
-            ->whereDate('created_at', $this->tanggal)
+        $date = Carbon::parse($this->tanggal);
+        $startOfMonth = $date->startOfMonth()->toDateString();
+        $endOfMonth = $date->endOfMonth()->toDateString();
+
+        $dataCollection = QuizAnswer::with(['user', 'quiz'])
+            ->whereDate('created_at', '>=', $startOfMonth)
+            ->whereDate('created_at', '<=', $endOfMonth)
             ->get()
             ->map(function ($quizAnswer, $index) {
                 return [
                     'No' => $index + 1,
+                    'Tanggal' => Carbon::parse($quizAnswer->created_at)->format('d-M-Y'),
+                    'Pertanyaan' => $quizAnswer->quiz->pertanyaan ?? '-',
                     'Nama' => $quizAnswer->user->nama,
                     'Email' => $quizAnswer->user->email,
                     'Jawaban' => $quizAnswer->jawaban,
                     'Gambar' => $quizAnswer->file ? URL::to('/storage/uploads/quiz/' . $quizAnswer->file) : '-',
                 ];
             });
+
+        return $dataCollection;
     }
 
     public function headings(): array
     {
         return [
             'No',
+            'Tanggal',
+            'Pertanyaan',
             'Nama',
             'Email',
             'Jawaban',

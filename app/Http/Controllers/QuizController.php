@@ -350,6 +350,9 @@ class QuizController extends Controller
     public function export(Request $request)
     {
         $tanggal = $request->query('tanggal');
-        return Excel::download(new QuizAnswerExport($tanggal), 'QuizAnswer_'  . $tanggal . '.xlsx');
+        $date = Carbon::parse($tanggal);
+        $formattedDate = $date->translatedFormat('F-Y');
+
+        return Excel::download(new QuizAnswerExport($tanggal), 'QuizAnswer_' . $formattedDate . '.xlsx');
     }
 }
