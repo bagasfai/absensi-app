@@ -55,12 +55,12 @@
       width: 40px;
       height: 50px;
     }
-
   </style>
 </head>
 
 <!-- Set "A5", "A4" or "A3" for class name -->
 <!-- Set also "landscape" if you need -->
+
 <body class="A4 landscape">
 
   <!-- Each sheet element should have the class "sheet" -->
@@ -95,7 +95,7 @@
         <th rowspan="3">Email</th>
         <th rowspan="3">Nama</th>
         <th rowspan="3">Jabatan</th>
-        <th colspan="{{$totalDays * 3}}">Tanggal</th>
+        <th colspan="{{ ($totalDays) * 3 }}">Tanggal</th>
         <th rowspan="3">TM</th>
         <th rowspan="3">TK</th>
         <th rowspan="3">TI</th>
@@ -108,16 +108,34 @@
       {{-- Tanggal --}}
       <tr>
         <?php 
-        for($i=1; $i<=$totalDays; $i++) {
+        use Carbon\Carbon;
+
+        for($i=26; $i<=$totalDays; $i++) {
+            $date = Carbon::createFromDate($tahun, $bulan, $i)->subMonth();
+            $formattedDate = $date->format('d F Y');
         ?>
-        <th colspan="3">{{$i}}</th>
-        <?php
+            <th colspan="3">{{ $formattedDate }}</th>
+            <?php
+        }
+        for($i=1; $i<=25; $i++) {
+            $date = Carbon::createFromDate($tahun, $bulan, $i);
+            $formattedDate = $date->format('d F Y');
+        ?>
+            <th colspan="3">{{ $formattedDate }}</th>
+            <?php
         }
         ?>
       </tr>
       <tr>
         <?php 
-        for($i=1; $i<=$totalDays; $i++) {
+        for($i=26; $i<=$totalDays; $i++) {
+        ?>
+        <th>Masuk</th>
+        <th>Keluar</th>
+        <th>Jam Kerja</th>
+        <?php
+        }
+        for($i=1; $i<=25; $i++) {
         ?>
         <th>Masuk</th>
         <th>Keluar</th>
@@ -128,13 +146,13 @@
       </tr>
 
       @foreach ($result as $res => $d)
-      <tr>
-        <td>{{$d['perner']}}</td>
-        <td>{{$d['email']}}</td>
-        <td>{{$d['nama']}}</td>
-        <td>{{$d['jabatan']}}</td>
+        <tr>
+          <td>{{ $d['perner'] }}</td>
+          <td>{{ $d['email'] }}</td>
+          <td>{{ $d['nama'] }}</td>
+          <td>{{ $d['jabatan'] }}</td>
 
-        <?php 
+          <?php 
         $totalhadir = 0;
         $totalmasuk = 0;
         $totalkeluar = 0;
@@ -142,7 +160,7 @@
         $totalsakit = 0;
         $totalalpha = 0;
 
-        for($i=1; $i <= $totalDays; $i++) {
+        for($i=26; $i <= $totalDays; $i++) {
             $dayKey = (string)$i; // Convert $i to string to match keys
 
             $tgl = "tgl_" . $dayKey;
@@ -205,21 +223,89 @@
                 $totalalpha++;
             }
             ?>
-        <td class="text-center">{{ $hadir[0] }}</td>
-        <td class="text-center">{{ $hadir[1] }}</td>
-        <td class="text-center">{{ $total_time }}</td>
-        <?php
+          <td class="text-center">{{ $hadir[0] }}</td>
+          <td class="text-center">{{ $hadir[1] }}</td>
+          <td class="text-center">{{ $total_time }}</td>
+          <?php
+        }
+        for($i=1; $i <= 25; $i++) {
+            $dayKey = (string)$i; // Convert $i to string to match keys
+
+            $tgl = "tgl_" . $dayKey;
+            $thour = "total_hours_" . $dayKey;
+            $tmin = "total_minutes_" . $dayKey;
+            $hadir = ['', '']; // Default empty array for Masuk and Keluar
+
+            if(isset($d[$thour]) && $d[$thour] > 0) {
+              $total_time = $d[$thour] . " Jam " . $d[$tmin] . " Menit";
+            } else {
+              $total_time = '-';
+            }
+
+            if (isset($d[$tgl])) { // Check if the value is set
+                if (!empty($d[$tgl])) { // Check if the value is not empty
+                    // If the value is not null or empty, process it
+                    // Check if $d->$tgl contains '-' to determine if it's concatenated
+                    if (strpos($d[$tgl], '-') !== false) {
+                        $hadir = explode("-", $d[$tgl]);
+                        // If it's concatenated, count as Masuk and Keluar
+                        if($hadir[0] != '') {
+                            $totalmasuk++;
+                            $totalhadir++;
+                        }
+
+                        if($hadir[1] != '') {
+                            $totalkeluar++;
+                        }
+
+                    } else {
+                        // If it's a single value, count based on its type
+                        switch ($d[$tgl]) {
+                            case 'I':
+                                $hadir[0] = $d[$tgl];
+                                $hadir[1] = $d[$tgl];
+                                $totalizin++;
+                                $totalhadir++;
+                                break;
+                            case 'S':
+                                $hadir[0] = $d[$tgl];
+                                $hadir[1] = $d[$tgl];
+                                $totalsakit++;
+                                $totalhadir++;
+                                break;
+                            case 'LIBUR':
+                                $hadir[0] = $d[$tgl];
+                                $hadir[1] = $d[$tgl];
+                                break;
+                            default:
+                                $totalalpha++; // Increment totalalpha for unspecified cases
+                                break;
+                        }
+                    }
+                } else {
+                    // If the value is empty, increment totalalpha
+                    $totalalpha++;
+                }
+            } else {
+                // If the value is not set, increment totalalpha
+                $totalalpha++;
+            }
+            ?>
+          <td class="text-center">{{ $hadir[0] }}</td>
+          <td class="text-center">{{ $hadir[1] }}</td>
+          <td class="text-center">{{ $total_time }}</td>
+          <?php
         }
         ?>
-        <td class="text-center">{{ $totalmasuk }}</td>
-        <td class="text-center">{{ $totalkeluar }}</td>
-        <td class="text-center">{{ $totalizin }}</td>
-        <td class="text-center">{{ $totalsakit }}</td>
-        <td class="text-center">{{ $totalalpha }}</td>
-        <td class="text-center">{{ $totalhadir }}</td>
-        <td>{{$d['total_hours_month'] . ' Jam ' . $d['total_minutes_month'] . " Menit"}}</td>
+          <td class="text-center">{{ $totalmasuk }}</td>
+          <td class="text-center">{{ $totalkeluar }}</td>
+          <td class="text-center">{{ $totalizin }}</td>
+          <td class="text-center">{{ $totalsakit }}</td>
+          <td class="text-center">{{ $totalalpha }}</td>
+          <td class="text-center">{{ $totalhadir }}</td>
+          <td>{{ $d['total_hours_month'] . ' Jam ' . $d['total_minutes_month'] . ' Menit' }}</td>
 
-      </tr>
+        </tr>
       @endforeach
 
     </table>
@@ -227,7 +313,7 @@
     <table width="100%" style="margin-top: 100px">
       <tr>
         <td></td>
-        <td style="text-align: center;">Tangerang, {{date('d-m-Y')}}</td>
+        <td style="text-align: center;">Tangerang, {{ date('d-m-Y') }}</td>
       </tr>
 
       <tr>

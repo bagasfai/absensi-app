@@ -124,7 +124,7 @@ class AbsensiController extends Controller
     $lokasi = $request->lokasi;
     $jam = date("H:i:s");
     $jenisAbsen = $request->jenis_absen;
-    $cuaca = $request->cuaca;
+    // $cuaca = $request->cuaca;
 
     if ($jenisAbsen == 'masuk') {
       $ket = 'masuk';
@@ -754,48 +754,110 @@ class AbsensiController extends Controller
 
   public function previewDataRekap(Request $request)
   {
-    $bulan = $request->bulan;
+    $bulan = str_pad($request->bulan, 2, "0", STR_PAD_LEFT);
     $tahun = $request->tahun;
 
-    $totalDays = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
+    // Menghitung tanggal mulai dan akhir
+    $startDate = Carbon::createFromDate($tahun, $bulan, 26)->subMonth()->toDateString();
+    $endDate = Carbon::createFromDate($tahun, $bulan, 25)->toDateString();
 
-    $selectClause = 'email, nama';
-
-    for ($day = 1; $day <= $totalDays; $day++) {
-      $selectClause .= ", MAX(
-        CASE 
-          WHEN DAY(tanggal) = $day THEN 
-            CASE 
-              WHEN status = 'H' THEN CONCAT_WS('-', COALESCE(jam_masuk, ''), COALESCE(jam_keluar, '')) 
-              WHEN status = 'I' THEN 'I' 
-              WHEN status = 'S' THEN 'S'
-              ELSE ''
-            END 
-          ELSE 
-            CASE 
-              WHEN DAYNAME(CONCAT(YEAR(tanggal), '-', MONTH(tanggal), '-', $day)) = 'Sunday' THEN 'LIBUR'
-              ELSE '' 
-            END
-        END
-      ) as tgl_$day";
-    }
+    $baseQuery = Absen::select([
+      'users.perner',
+      'users.jabatan',
+      'absens.email',
+      'absens.nama',
+      'absens.status',
+      'absens.tanggal',
+      'absens.jam_masuk',
+      'absens.jam_keluar',
+      DB::raw("DAYNAME(absens.tanggal) AS hari"),
+      DB::raw("DAY(absens.tanggal) AS date"),
+      DB::raw('
+            FLOOR(TIMESTAMPDIFF(SECOND, absens.jam_masuk, absens.jam_keluar) / 3600) as total_hours,
+            FLOOR((TIMESTAMPDIFF(SECOND, absens.jam_masuk, absens.jam_keluar) % 3600) / 60) as total_minutes
+        ')
+    ])
+      ->leftJoin('users', 'absens.email', '=', 'users.email')
+      ->whereBetween('absens.tanggal', [$startDate, $endDate]);
 
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
-      $previewData = Absen::selectRaw($selectClause)
-        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
-        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-        ->whereIn('email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
-        ->groupByRaw('email, nama')
+      $rekap = $baseQuery->whereIn('absens.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->get();
+    } elseif (auth()->user()->jabatan == 'ADMIN') {
+      $rekap = $baseQuery->where('users.jabatan', 'KORLAP')
+        ->whereIn('absens.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
         ->get();
     } else {
-      $previewData = Absen::selectRaw($selectClause)
-        ->whereRaw('MONTH(tanggal) = ?', [$bulan])
-        ->whereRaw('YEAR(tanggal) = ?', [$tahun])
-        ->groupByRaw('email, nama')
-        ->get();
+      $rekap = $baseQuery->get();
     }
 
-    return response()->json($previewData);
+    $result = [];
+    foreach ($rekap as $item) {
+      if (!array_key_exists($item->email, $result)) {
+        $result[$item->email] = [
+          "perner" => $item->perner,
+          "jabatan" => $item->jabatan,
+          "nama" => $item->nama,
+          "email" => $item->email,
+          "total_hours_month" => 0,
+          "total_minutes_month" => 0,
+        ];
+
+        for ($day = 26; $day <= cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun); $day++) {
+          $today = Carbon::createFromFormat("Y-m-d", "{$tahun}-{$bulan}-{$day}");
+
+          if ($today->englishDayOfWeek === "Sunday") {
+            $result[$item->email]['tgl_' . $day] = "LIBUR";
+            $result[$item->email]['total_hours_' . $day] = 0;
+            $result[$item->email]['total_minutes_' . $day] = 0;
+          } else {
+            $result[$item->email]['tgl_' . $day] = null;
+            $result[$item->email]['total_hours_' . $day] = null;
+            $result[$item->email]['total_minutes_' . $day] = null;
+          }
+        }
+
+        for ($day = 1; $day <= 25; $day++) {
+          $today = Carbon::createFromFormat("Y-m-d", "{$tahun}-{$bulan}-{$day}");
+
+          if ($today->englishDayOfWeek === "Sunday") {
+            $result[$item->email]['tgl_' . $day] = "LIBUR";
+            $result[$item->email]['total_hours_' . $day] = 0;
+            $result[$item->email]['total_minutes_' . $day] = 0;
+          } else {
+            $result[$item->email]['tgl_' . $day] = null;
+            $result[$item->email]['total_hours_' . $day] = null;
+            $result[$item->email]['total_minutes_' . $day] = null;
+          }
+        }
+      }
+
+      $result[$item->email]['tgl_' . $item->date] = match ($item->status) {
+        "H", "0" => "{$item->jam_masuk}-{$item->jam_keluar}",
+        'I' => 'I',
+        'S' => 'S',
+        null => "A"
+      };
+
+      if ($item->status == 'H' && $item->total_hours !== null && $item->total_minutes !== null) {
+        $result[$item->email]['total_hours_' . $item->date] = $item->total_hours;
+        $result[$item->email]['total_minutes_' . $item->date] = $item->total_minutes;
+
+        $result[$item->email]['total_hours_month'] += $item->total_hours;
+        $result[$item->email]['total_minutes_month'] += $item->total_minutes;
+      }
+    }
+
+    foreach ($result as $email => $data) {
+      $total_minutes = $data['total_minutes_month'];
+      $additional_hours = floor($total_minutes / 60);
+      $remaining_minutes = $total_minutes % 60;
+
+      $result[$email]['total_hours_month'] += $additional_hours;
+      $result[$email]['total_minutes_month'] = $remaining_minutes;
+    }
+
+    return response()->json($result);
   }
 
   public function cetaklaporan(Request $request)
@@ -844,93 +906,106 @@ class AbsensiController extends Controller
     $namabulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     $totalDays =  cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
 
+    // Menghitung tanggal mulai dan akhir
+    $startDate = Carbon::createFromDate($tahun, $bulan, 26)->subMonth()->toDateString();
+    $endDate = Carbon::createFromDate($tahun, $bulan, 25)->toDateString();
+
+    $baseQuery = Absen::select([
+      'users.perner',
+      'users.jabatan',
+      'absens.email',
+      'absens.nama',
+      'absens.status',
+      'absens.tanggal',
+      'absens.jam_masuk',
+      'absens.jam_keluar',
+      DB::raw("DAYNAME(absens.tanggal) AS hari"),
+      DB::raw("DAY(absens.tanggal) AS date"),
+      DB::raw('
+            FLOOR(TIMESTAMPDIFF(SECOND, absens.jam_masuk, absens.jam_keluar) / 3600) as total_hours,
+            FLOOR((TIMESTAMPDIFF(SECOND, absens.jam_masuk, absens.jam_keluar) % 3600) / 60) as total_minutes
+        ')
+    ])
+      ->leftJoin('users', 'absens.email', '=', 'users.email')
+      ->whereBetween('absens.tanggal', [$startDate, $endDate]);
+
     if (auth()->user()->jabatan == 'TEAM WAGNER') {
-      $rekap = Absen::select([
-        "users.perner",
-        "users.jabatan",
-        "absens.email",
-        "absens.nama",
-        "absens.status",
-        "absens.tanggal",
-        "absens.jam_masuk",
-        "absens.jam_keluar",
-        "absens.cuaca",
-        DB::raw("DAYNAME(absens.tanggal) AS hari"),
-        DB::raw("DAY(absens.tanggal) AS date"),
-      ])
-        ->leftJoin('users', 'absens.email', '=', 'users.email')
-        ->whereRaw('MONTH(absens.tanggal) = ?', [$bulan])
-        ->whereRaw('YEAR(absens.tanggal) = ?', [$tahun])
+      $rekap = $baseQuery->whereIn('absens.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
+        ->get();
+    } elseif (auth()->user()->jabatan == 'ADMIN') {
+      $rekap = $baseQuery->where('users.jabatan', 'KORLAP')
         ->whereIn('absens.email', ['kucingjuna400@gmail.com', 'handhalah@sds.co.id', 'furganalathas@gmail.com'])
-        // ->groupByRaw('email, nama')
         ->get();
     } else {
-      $rekap = Absen::select([
-        "users.perner",
-        "users.jabatan",
-        "absens.email",
-        "absens.nama",
-        "absens.status",
-        "absens.tanggal",
-        "absens.jam_masuk",
-        "absens.jam_keluar",
-        "absens.cuaca",
-        DB::raw("DAYNAME(absens.tanggal) AS hari"),
-        DB::raw("DAY(absens.tanggal) AS date"),
-      ])
-        ->leftJoin('users', 'absens.email', '=', 'users.email')
-        ->whereRaw('MONTH(absens.tanggal) = ?', [$bulan])
-        ->whereRaw('YEAR(absens.tanggal) = ?', [$tahun])
-        // ->groupByRaw('email, nama')
-        ->get();
+      $rekap = $baseQuery->get();
     }
+
+    $total_hours_month_raw = 0;
+    $total_minutes_month_raw = 0;
 
     $result = [];
     foreach ($rekap as $item) {
-
       if (!array_key_exists($item->email, $result)) {
         $result[$item->email] = [
           "perner" => $item->perner,
           "jabatan" => $item->jabatan,
           "nama" => $item->nama,
           "email" => $item->email,
-          "cuaca" => $item->cuaca,
+          "total_hours_month" => 0,
+          "total_minutes_month" => 0,
         ];
 
-        for ($day = 1; $day <= $totalDays; $day++) {
-          $today = Carbon::createFromFormat("Ymj", "{$tahun}{$bulan}{$day}");
+        for ($day = 26; $day <= $totalDays; $day++) {
+          $today = Carbon::createFromFormat("Y-m-d", "{$tahun}-{$bulan}-{$day}");
 
           if ($today->englishDayOfWeek === "Sunday") {
-            $result[$item->email][$day] = "LIBUR";
-            $result[$item->email][$day . '_cuaca'] = null;
+            $result[$item->email]['tgl_' . $day] = "LIBUR";
+            $result[$item->email]['total_hours_' . $day] = 0;
+            $result[$item->email]['total_minutes_' . $day] = 0;
           } else {
-            $result[$item->email][$day] = null;
-            $result[$item->email][$day . '_cuaca'] = null;
+            $result[$item->email]['tgl_' . $day] = null;
+            $result[$item->email]['total_hours_' . $day] = null;
+            $result[$item->email]['total_minutes_' . $day] = null;
           }
         }
-      };
+      }
 
-      $result[$item->email][$item->date . '_cuaca'] = match ($item->status) {
-        "H", "0" => $item->cuaca,
-        'I' => 'I',
-        'S' => 'S',
-        null => "A"
-      };
+      $total_hours_month_raw += $item['total_hours'];
 
-      $result[$item->email][$item->date] = match ($item->status) {
+      $result[$item->email]['tgl_' . $item->date] = match ($item->status) {
         "H", "0" => "{$item->jam_masuk}-{$item->jam_keluar}",
         'I' => 'I',
         'S' => 'S',
         null => "A"
       };
+
+      if ($item->status == 'H' && $item->total_hours !== null && $item->total_minutes !== null) {
+        $result[$item->email]['total_hours_' . $item->date] = $item->total_hours;
+        $result[$item->email]['total_minutes_' . $item->date] = $item->total_minutes;
+
+        $result[$item->email]['total_hours_month'] += $item->total_hours;
+        $result[$item->email]['total_minutes_month'] += $item->total_minutes;
+      }
     }
 
-    $timestamp = Carbon::now()->format('d-m-Y_H_i_55');
+    foreach ($result as $email => $data) {
+      $total_minutes = $data['total_minutes_month'];
+      $additional_hours = floor($total_minutes / 60);
+      $remaining_minutes = $total_minutes % 60;
 
-    return Excel::download(
-      new LaporanExport($bulan, $tahun, $namabulan, $totalDays, $result),
-      'Rekap Absensi ' . $timestamp . '.xlsx'
-    );
+      $result[$email]['total_hours_month'] += $additional_hours;
+      $result[$email]['total_minutes_month'] = $remaining_minutes;
+    }
+
+    if (isset($_POST['exportExcel'])) {
+      $time = date("d-m-Y H:i:s");
+      // fungsi header dengan mengirimkan raw data excel
+      header("Content-type: application/vnd-ms-excel");
+      // mendefinisikan nama file export "hasil-export.xls"
+      header("Content-Disposition: attachment; filename=Rekap Absensi $time.xls");
+    }
+
+    return view('absensi.laporan.cetakrekap', compact('bulan', 'tahun', 'rekap', 'namabulan', 'bulans', 'result', 'totalDays'));
   }
 
   public function izinsakit(Request $request)
